@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>JotaFiles - Gestor de Archivos Online</title>
+    <title>QuepajaFiles - Gestor de Archivos Online</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.39.3/dist/umd/supabase.js"></script>
 
     <style>
@@ -48,6 +48,60 @@
         .header p {
             color: #6b7280;
             font-size: 1.1rem;
+        }
+
+        .user-section {
+            background: linear-gradient(135deg, #e0f2fe, #b3e5fc);
+            border-radius: 16px;
+            padding: 25px;
+            margin-bottom: 30px;
+            border: 1px solid #81d4fa;
+        }
+
+        .user-section h3 {
+            color: #0277bd;
+            margin-bottom: 15px;
+            font-size: 1.2rem;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .user-input {
+            display: flex;
+            gap: 15px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .user-input input {
+            flex: 1;
+            min-width: 200px;
+            padding: 12px 16px;
+            border: 2px solid #81d4fa;
+            border-radius: 10px;
+            font-size: 1rem;
+            background: white;
+            transition: all 0.3s ease;
+        }
+
+        .user-input input:focus {
+            outline: none;
+            border-color: #0277bd;
+            box-shadow: 0 0 0 3px rgba(2, 119, 189, 0.1);
+        }
+
+        .current-user {
+            background: #0277bd;
+            color: white;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 5px;
         }
 
         .setup-section {
@@ -282,9 +336,23 @@
             font-size: 0.9rem;
         }
 
+        .file-user {
+            background: linear-gradient(135deg, #e0f2fe, #b3e5fc);
+            color: #0277bd;
+            padding: 4px 10px;
+            border-radius: 12px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            margin-top: 5px;
+        }
+
         .file-actions {
             display: flex;
             gap: 10px;
+            flex-wrap: wrap;
         }
 
         .action-btn {
@@ -382,6 +450,37 @@
             font-size: 1rem;
         }
 
+        .sql-block {
+            background: #1f2937;
+            color: #f9fafb;
+            padding: 20px;
+            border-radius: 8px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9rem;
+            overflow-x: auto;
+            white-space: pre-wrap;
+            margin: 15px 0;
+        }
+
+        .warning-box {
+            background: #fef3c7;
+            border: 2px solid #fcd34d;
+            border-radius: 12px;
+            padding: 20px;
+            margin: 20px 0;
+        }
+
+        .warning-box h4 {
+            color: #92400e;
+            margin-bottom: 10px;
+            font-weight: 600;
+        }
+
+        .warning-box p {
+            color: #78350f;
+            margin-bottom: 10px;
+        }
+
         @media (max-width: 768px) {
             .container {
                 padding: 20px;
@@ -399,14 +498,24 @@
             .upload-area {
                 padding: 40px 20px;
             }
+
+            .user-input {
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            .user-input input {
+                min-width: auto;
+            }
         }
     </style>
 </head>
 <body>
     <div class="container">
         <div class="header">
-            <h1>📚 Jotafiles</h1>
-            <p>Tu espacio personal para organizar todos tus archivos universitarios</p>
+            <h1>📚 QuepajaFiles</h1>
+            <p>espacio para organizar archivos del inacap mas facil :]</p>
+            <p>Ocupen la wea bien amikos porfavor</p>
         </div>
 
         <div class="setup-section" id="setupSection">
@@ -420,6 +529,17 @@
         </div>
 
         <div class="upload-section" id="uploadSection">
+            <div class="user-section">
+                <h3>👤 Identificación de Usuario</h3>
+                <p>Porfavor ingresar tu nombre para identificar tus archivos</p>
+                <div class="user-input">
+                    <input type="text" id="userNameInput" placeholder="Tu nombre (ej: Juan Pérez)" />
+                    <div class="current-user" id="currentUser">
+                        👤 Sin identificar
+                    </div>
+                </div>
+            </div>
+
             <div class="stats-card">
                 <div class="stats-number" id="totalFiles">0</div>
                 <div class="stats-label">archivos guardados</div>
@@ -459,14 +579,13 @@
                 </div>
             </div>
 
-            <div class="upload-area" id="uploadArea" onclick="document.getElementById('fileInput').click()">
+            <div class="upload-area" id="uploadArea" onclick="triggerFileUpload()">
                 <div class="upload-icon">☁️</div>
                 <div class="upload-text">Arrastra tus archivos aquí o haz clic para seleccionar</div>
                 <div class="upload-subtext">Soporta documentos, código, imágenes y archivos comprimidos</div>
             </div>
 
             <input type="file" id="fileInput" class="file-input" multiple accept=".pdf,.doc,.docx,.ppt,.pptx,.xls,.xlsx,.txt,.jpg,.jpeg,.png,.py,.js,.html,.css,.cpp,.c,.java,.json,.xml,.sql,.md,.yml,.yaml,.php,.rb,.go,.ts,.jsx,.tsx,.vue,.swift,.kt,.dart,.r,.m,.sh,.bat,.ps1,.csv,.zip,.rar,.7z">
-
 
             <div class="progress-bar" id="progressBar" style="display: none;">
                 <div class="progress-fill" id="progressFill"></div>
@@ -487,12 +606,58 @@
         let selectedCategory = 'apuntes';
         let files = [];
         let debugMode = true; // Activar debug
+        let currentUser = '';
 
         // Auto-conectar al cargar la página
         document.addEventListener('DOMContentLoaded', () => {
             document.querySelector('[data-category="apuntes"]').classList.add('selected');
+            setupUserInput();
             setTimeout(autoConnectSupabase, 1000);
         });
+
+        // Configurar entrada de usuario
+        function setupUserInput() {
+            const userInput = document.getElementById('userNameInput');
+            const currentUserDiv = document.getElementById('currentUser');
+            
+            // Cargar usuario guardado
+            const savedUser = localStorage.getItem('jotafiles_user');
+            if (savedUser) {
+                currentUser = savedUser;
+                userInput.value = savedUser;
+                updateUserDisplay();
+            }
+            
+            userInput.addEventListener('input', (e) => {
+                currentUser = e.target.value.trim();
+                if (currentUser) {
+                    localStorage.setItem('jotafiles_user', currentUser);
+                } else {
+                    localStorage.removeItem('jotafiles_user');
+                }
+                updateUserDisplay();
+            });
+        }
+
+        function updateUserDisplay() {
+            const currentUserDiv = document.getElementById('currentUser');
+            if (currentUser) {
+                currentUserDiv.innerHTML = `👤 ${currentUser}`;
+                currentUserDiv.style.background = '#0277bd';
+            } else {
+                currentUserDiv.innerHTML = '👤 Sin identificar';
+                currentUserDiv.style.background = '#6b7280';
+            }
+        }
+
+        function triggerFileUpload() {
+            if (!currentUser) {
+                alert('Por favor, identifícate con tu nombre antes de subir archivos');
+                document.getElementById('userNameInput').focus();
+                return;
+            }
+            document.getElementById('fileInput').click();
+        }
 
         // Función de debug
         function debugLog(message, data = null) {
@@ -534,6 +699,11 @@
             uploadArea.addEventListener('drop', (e) => {
                 e.preventDefault();
                 uploadArea.classList.remove('drag-over');
+                if (!currentUser) {
+                    alert('Por favor, identifícate con tu nombre antes de subir archivos');
+                    document.getElementById('userNameInput').focus();
+                    return;
+                }
                 const files = e.dataTransfer.files;
                 handleFiles(files);
             });
@@ -611,7 +781,11 @@
 
                 if (connectivityError) {
                     if (connectivityError.code === 'PGRST116' || connectivityError.message.includes('does not exist')) {
-                        debugLog('⚠️ Tabla "files" no existe');
+                        debugLog('⚠️ Tabla "files" no existe o tiene estructura incorrecta');
+                        showTableInstructions();
+                        return;
+                    } else if (connectivityError.message.includes('column') && connectivityError.message.includes('does not exist')) {
+                        debugLog('⚠️ Estructura de tabla incorrecta');
                         showTableInstructions();
                         return;
                     } else if (connectivityError.message.includes('Failed to fetch')) {
@@ -686,319 +860,313 @@
                 let errorMessage = error.message;
                 let helpText = '';
                 
-                if (error.message.includes('Failed to fetch') || error.message.includes('Timeout')) {
-                    errorMessage = 'No se puede conectar al servidor';
-                    helpText = 'Verifica que tu URL sea correcta y que el proyecto esté activo en Supabase';
+                if (error.message.includes('Failed to fetch') || error.message.includes('Timeout')) {errorMessage = 'Error de conexión con Supabase';
+                    helpText = 'Verifica tu conexión a internet y que la URL de Supabase sea correcta.';
                 } else if (error.message.includes('Invalid API key')) {
                     errorMessage = 'Clave de API inválida';
-                    helpText = 'Verifica que copiaste la clave pública (anon key) correctamente';
-                } else if (error.message.includes('Project not found')) {
-                    errorMessage = 'Proyecto no encontrado';
-                    helpText = 'Verifica que tu URL de proyecto sea correcta';
-                } else if (error.message === 'Configuración incompleta') {
+                    helpText = 'Revisa que tu anon key sea correcta y tenga los permisos necesarios.';
+                } else if (error.message.includes('Configuración incompleta')) {
                     errorMessage = 'Configuración incompleta';
-                    helpText = 'Asegúrate de configurar tanto la URL como la clave pública';
+                    helpText = 'Asegúrate de configurar tanto la URL como la clave pública de Supabase.';
                 }
                 
                 showStatus(`❌ ${errorMessage}`, 'error');
-                showConfigInstructions(helpText);
+                updateLoadingText(`Error: ${errorMessage}`);
+                
+                if (helpText) {
+                    document.getElementById('connectionStatus').innerHTML += `<p style="margin-top: 10px; color: #6b7280;">${helpText}</p>`;
+                }
             }
         }
 
-        function showConfigInstructions(helpText = '') {
+        function showTableInstructions() {
             const setupSection = document.getElementById('setupSection');
             setupSection.innerHTML = `
-                <h3>🔧 Configuración de Supabase</h3>
+                <div class="warning-box">
+                    <h4>⚠️ Configuración de Base de Datos Requerida</h4>
+                    <p>Para usar JotaFiles, necesitas crear una tabla en tu base de datos de Supabase.</p>
+                    <p><strong>Ejecuta este SQL en el Editor SQL de Supabase:</strong></p>
+                </div>
                 
-                ${helpText ? `<div style="background: #fee2e2; border: 1px solid #ef4444; border-radius: 12px; padding: 15px; margin: 15px 0; color: #dc2626;">
-                    <strong>💡 Sugerencia:</strong> ${helpText}
-                </div>` : ''}
+                <div class="sql-block">CREATE TABLE IF NOT EXISTS files (
+    id BIGSERIAL PRIMARY KEY,
+    name TEXT NOT NULL,
+    category TEXT NOT NULL,
+    user_name TEXT NOT NULL,
+    file_path TEXT,
+    file_size BIGINT,
+    content_type TEXT,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+-- Habilitar Row Level Security (RLS)
+ALTER TABLE files ENABLE ROW LEVEL SECURITY;
+
+-- Crear política para permitir todas las operaciones
+CREATE POLICY "Allow all operations on files" ON files FOR ALL USING (true);</div>
                 
-                <div style="background: #fef3c7; border: 1px solid #f59e0b; border-radius: 12px; padding: 20px; margin: 20px 0;">
-                    <h4 style="color: #92400e; margin-bottom: 15px;">📝 Pasos detallados:</h4>
-                    <ol style="color: #92400e; line-height: 1.8; margin-left: 20px;">
-                        <li><strong>Ir a tu dashboard de Supabase:</strong> <a href="https://app.supabase.com" target="_blank" style="color: #0066cc;">app.supabase.com</a></li>
-                        <li><strong>Selecciona tu proyecto</strong> (o crea uno nuevo)</li>
-                        <li><strong>Ve a Settings → API</strong> en el menú lateral</li>
-                        <li><strong>Copia tu Project URL</strong> (empieza con https://)</li>
-                        <li><strong>Copia tu anon/public key</strong> (es MUY larga, empieza con "eyJ")</li>
-                        <li><strong>Reemplaza las credenciales en el código</strong></li>
-                    </ol>
+                <div class="warning-box">
+                    <h4>📋 Pasos a seguir:</h4>
+                    <p>1. Ve a tu panel de Supabase → Editor SQL</p>
+                    <p>2. Copia y pega el código SQL de arriba</p>
+                    <p>3. Haz clic en "Run" para ejecutar</p>
+                    <p>4. Recarga esta página</p>
                 </div>
                 
                 <button class="connect-btn" onclick="location.reload()" style="margin-top: 20px;">
-                    🔄 Reintentar Conexión
+                    🔄 Recargar Página
                 </button>
-                
-                <div id="debugInfo" class="debug-info" style="display: block; margin-top: 20px;">
-                    Información de debug aparecerá aquí...
-                </div>
-            `;
-        }
-
-        function showTableInstructions() {
-            const statusDiv = document.getElementById('connectionStatus');
-            statusDiv.innerHTML = `
-                <div style="background: #fef2f2; border: 1px solid #ef4444; border-radius: 12px; padding: 20px; margin: 20px 0;">
-                    <h4 style="color: #dc2626; margin-bottom: 15px;">🗄️ Crear Tabla Requerida</h4>
-                    <p style="color: #dc2626; margin-bottom: 15px;">Ejecuta este SQL en tu Supabase (SQL Editor):</p>
-                    <div style="background: #1f2937; color: #e5e7eb; border-radius: 8px; padding: 15px; font-family: monospace; font-size: 0.9rem; overflow-x: auto;">
-CREATE TABLE files (<br>
-&nbsp;&nbsp;id UUID DEFAULT gen_random_uuid() PRIMARY KEY,<br>
-&nbsp;&nbsp;name TEXT NOT NULL,<br>
-&nbsp;&nbsp;category TEXT NOT NULL,<br>
-&nbsp;&nbsp;size BIGINT NOT NULL,<br>
-&nbsp;&nbsp;path TEXT NOT NULL,<br>
-&nbsp;&nbsp;created_at TIMESTAMP DEFAULT NOW()<br>
-);
-                    </div>
-                    <button class="connect-btn" onclick="location.reload()" style="margin-top: 15px;">
-                        ✅ Ya creé la tabla - Reintentar
-                    </button>
-                </div>
             `;
         }
 
         function showStatus(message, type) {
             const statusDiv = document.getElementById('connectionStatus');
-            statusDiv.className = `status ${type}`;
-            statusDiv.textContent = message;
+            statusDiv.innerHTML = `<div class="status ${type}">${message}</div>`;
         }
 
         function selectCategory(element) {
-            document.querySelectorAll('.category-btn').forEach(btn => btn.classList.remove('selected'));
+            // Remover selección anterior
+            document.querySelectorAll('.category-btn').forEach(btn => {
+                btn.classList.remove('selected');
+            });
+            
+            // Seleccionar nueva categoría
             element.classList.add('selected');
             selectedCategory = element.dataset.category;
+            
+            debugLog(`Categoría seleccionada: ${selectedCategory}`);
         }
 
         async function handleFiles(fileList) {
-            if (!selectedCategory) {
-                alert('Por favor, selecciona una categoría primero');
-                return;
-            }
-
             const progressBar = document.getElementById('progressBar');
             const progressFill = document.getElementById('progressFill');
             
             progressBar.style.display = 'block';
+            progressFill.style.width = '0%';
             
+            const totalFiles = fileList.length;
+            let completedFiles = 0;
+
             for (let i = 0; i < fileList.length; i++) {
                 const file = fileList[i];
-                const progress = ((i + 1) / fileList.length) * 100;
-                progressFill.style.width = progress + '%';
                 
-                await uploadFile(file);
+                try {
+                    await uploadFile(file);
+                    completedFiles++;
+                    
+                    const progress = (completedFiles / totalFiles) * 100;
+                    progressFill.style.width = `${progress}%`;
+                    
+                } catch (error) {
+                    debugLog(`Error subiendo ${file.name}:`, error);
+                    alert(`Error subiendo ${file.name}: ${error.message}`);
+                }
             }
             
-            progressBar.style.display = 'none';
-            document.getElementById('fileInput').value = '';
-            loadFiles();
+            // Ocultar barra de progreso
+            setTimeout(() => {
+                progressBar.style.display = 'none';
+                progressFill.style.width = '0%';
+            }, 1000);
+            
+            // Recargar lista de archivos
+            await loadFiles();
         }
-async function uploadFile(file) {
+
+        async function uploadFile(file) {
             try {
-                const fileName = `${selectedCategory}/${Date.now()}-${file.name}`;
+                debugLog(`Iniciando subida de: ${file.name}`);
+                
+                // Generar nombre único para el archivo
+                const timestamp = Date.now();
+                const randomString = Math.random().toString(36).substring(2, 8);
+                const fileExtension = file.name.split('.').pop();
+                const uniqueFileName = `${currentUser}_${selectedCategory}_${timestamp}_${randomString}.${fileExtension}`;
                 
                 // Subir archivo al storage
                 const { data: uploadData, error: uploadError } = await supabase.storage
                     .from('university-files')
-                    .upload(fileName, file);
-
+                    .upload(`${selectedCategory}/${uniqueFileName}`, file);
+                
                 if (uploadError) {
                     throw uploadError;
                 }
-
-                // Guardar metadatos en la base de datos
+                
+                debugLog(`Archivo subido al storage: ${uploadData.path}`);
+                
+                // Guardar información en la base de datos
                 const { data: dbData, error: dbError } = await supabase
                     .from('files')
                     .insert([
                         {
                             name: file.name,
                             category: selectedCategory,
-                            size: file.size,
-                            path: fileName
+                            user_name: currentUser,
+                            file_path: uploadData.path,
+                            file_size: file.size,
+                            content_type: file.type || 'application/octet-stream'
                         }
-                    ]);
-
+                    ])
+                    .select();
+                
                 if (dbError) {
+                    // Si falla la DB, intentar eliminar el archivo del storage
+                    await supabase.storage
+                        .from('university-files')
+                        .remove([uploadData.path]);
                     throw dbError;
                 }
-
-                debugLog(`✅ Archivo subido: ${file.name}`);
+                
+                debugLog(`Archivo registrado en DB con ID: ${dbData[0].id}`);
+                return dbData[0];
                 
             } catch (error) {
-                debugLog(`❌ Error subiendo ${file.name}:`, error);
-                console.error('Error:', error);
-                alert(`Error subiendo ${file.name}: ${error.message}`);
+                debugLog(`Error en uploadFile para ${file.name}:`, error);
+                throw error;
             }
         }
 
         async function loadFiles() {
             try {
-                const { data, error } = await supabase
+                debugLog('Cargando archivos...');
+                
+                const { data: filesData, error } = await supabase
                     .from('files')
                     .select('*')
                     .order('created_at', { ascending: false });
-
+                
                 if (error) {
                     throw error;
                 }
-
-                files = data || [];
-                updateFileCount();
-                renderFiles();
+                
+                files = filesData || [];
+                debugLog(`Archivos cargados: ${files.length}`);
+                
+                updateFilesDisplay();
+                updateStats();
                 
             } catch (error) {
-                debugLog('❌ Error cargando archivos:', error);
-                console.error('Error:', error);
+                debugLog('Error cargando archivos:', error);
+                console.error('Error loading files:', error);
             }
         }
 
-        function updateFileCount() {
-            document.getElementById('totalFiles').textContent = files.length;
-        }
-
-function renderFiles() {
-    const filesGrid = document.getElementById('filesGrid');
-    
-    if (files.length === 0) {
-        filesGrid.innerHTML = `
-            <div style="grid-column: 1 / -1; text-align: center; padding: 60px; color: #6b7280;">
-                <div style="font-size: 3rem; margin-bottom: 20px;">📁</div>
-                <h3 style="margin-bottom: 10px; color: #374151;">No hay archivos aún</h3>
-                <p>Sube tus primeros archivos para comenzar a organizar tu biblioteca</p>
-            </div>
-        `;
-        return;
-    }
-
-    filesGrid.innerHTML = files.map(file => {
-        const extension = file.name.split('.').pop().toLowerCase();
-        const isCodeFile = ['py', 'js', 'html', 'css', 'cpp', 'java', 'php', 'rb', 'go', 'ts', 'jsx', 'tsx'].includes(extension);
-        const fileColor = getFileColor(file.name);
-        
-        return `
-            <div class="file-card" style="border-left: 4px solid ${fileColor};">
-                <div class="file-info">
-                    <div class="file-icon" style="color: ${fileColor};">${getFileIcon(file.name)}</div>
-                    <div class="file-details">
-                        <h5>${file.name}</h5>
-                        <p>${getCategoryDisplayName(file.category)} • ${formatFileSize(file.size)}</p>
-                        <p style="font-size: 0.8rem; color: #9ca3af;">
-                            ${new Date(file.created_at).toLocaleDateString('es-ES')}
-                        </p>
-                        ${isCodeFile ? `<span style="background: ${fileColor}; color: white; padding: 2px 8px; border-radius: 12px; font-size: 0.7rem; font-weight: 600;">${extension.toUpperCase()}</span>` : ''}
+        function updateFilesDisplay() {
+            const filesGrid = document.getElementById('filesGrid');
+            
+            if (files.length === 0) {
+                filesGrid.innerHTML = `
+                    <div style="grid-column: 1 / -1; text-align: center; padding: 60px 20px; color: #6b7280;">
+                        <div style="font-size: 3rem; margin-bottom: 20px;">📁</div>
+                        <h3 style="margin-bottom: 10px; color: #374151;">No hay archivos aún</h3>
+                        <p>Sube tu primer archivo para comenzar a organizar tu biblioteca universitaria</p>
+                    </div>
+                `;
+                return;
+            }
+            
+            filesGrid.innerHTML = files.map(file => `
+                <div class="file-card">
+                    <div class="file-info">
+                        <div class="file-icon">${getFileIcon(file.name, file.category)}</div>
+                        <div class="file-details">
+                            <h5>${file.name}</h5>
+                            <p>${formatFileSize(file.file_size)} • ${formatDate(file.created_at)}</p>
+                            <div class="file-user">👤 ${file.user_name}</div>
+                        </div>
+                    </div>
+                    <div class="file-actions">
+                        <button class="action-btn download-btn" onclick="downloadFile('${file.id}', '${file.file_path}', '${file.name}')">
+                            ⬇️ Descargar
+                        </button>
+                        <button class="action-btn delete-btn" onclick="deleteFile('${file.id}', '${file.file_path}', '${file.name}')">
+                            🗑️ Eliminar
+                        </button>
                     </div>
                 </div>
-                <div class="file-actions">
-                    <button class="action-btn download-btn" onclick="downloadFile('${file.path}', '${file.name}')">
-                        ⬇️ Descargar
-                    </button>
-                    ${isCodeFile ? `<button class="action-btn" style="background: #8b5cf6; color: white;" onclick="previewCode('${file.path}', '${file.name}')">👁️ Vista</button>` : ''}
-                    <button class="action-btn delete-btn" onclick="deleteFile('${file.id}', '${file.path}')">
-                        🗑️ Eliminar
-                    </button>
-                </div>
-            </div>
-        `;
-    }).join('');
-}
-
-function getFileIcon(fileName) {
-    const extension = fileName.split('.').pop().toLowerCase();
-    const icons = {
-        // Documentos
-        pdf: '📄',
-        doc: '📝',
-        docx: '📝',
-        ppt: '🎯',
-        pptx: '🎯',
-        xls: '📊',
-        xlsx: '📊',
-        txt: '📄',
-        
-        // Imágenes
-        jpg: '🖼️',
-        jpeg: '🖼️',
-        png: '🖼️',
-        gif: '🖼️',
-        svg: '🖼️',
-        
-        // Código Python
-        py: '🐍',
-        
-        // Código Web
-        html: '🌐',
-        css: '🎨',
-        js: '⚡',
-        jsx: '⚛️',
-        tsx: '⚛️',
-        vue: '💚',
-        
-        // Código Backend
-        php: '🐘',
-        java: '☕',
-        cpp: '⚙️',
-        c: '⚙️',
-        cs: '🔷',
-        rb: '💎',
-        go: '🐹',
-        rs: '🦀',
-        swift: '🍎',
-        kt: '🤖',
-        dart: '🎯',
-        
-        // Bases de datos
-        sql: '🗄️',
-        
-        // Configuración y datos
-        json: '📋',
-        xml: '📋',
-        yml: '⚙️',
-        yaml: '⚙️',
-        csv: '📊',
-        
-        // Scripts
-        sh: '⌨️',
-        bat: '⌨️',
-        ps1: '💙',
-        
-        // Documentación
-        md: '📖',
-        
-        // Archivos comprimidos
-        zip: '📦',
-        rar: '📦',
-        '7z': '📦',
-        tar: '📦',
-        gz: '📦',
-        
-        // Otros
-        r: '📈',
-        m: '🔢',
-        ts: '🔷'
-    };
-    return icons[extension] || '📁';
-}
-
-        function formatFileSize(bytes) {
-            if (bytes === 0) return '0 Bytes';
-            const k = 1024;
-            const sizes = ['Bytes', 'KB', 'MB', 'GB'];
-            const i = Math.floor(Math.log(bytes) / Math.log(k));
-            return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+            `).join('');
         }
 
-        async function downloadFile(filePath, fileName) {
+        function getFileIcon(fileName, category) {
+            const extension = fileName.split('.').pop().toLowerCase();
+            
+            // Iconos por categoría
+            const categoryIcons = {
+                'apuntes': '📝',
+                'codigo': '💻',
+                'examenes': '📋',
+                'trabajos': '📄',
+                'libros': '📚',
+                'presentaciones': '🎯',
+                'otros': '📁'
+            };
+            
+            // Iconos por extensión
+            const extensionIcons = {
+                'pdf': '📄',
+                'doc': '📝', 'docx': '📝',
+                'ppt': '🎯', 'pptx': '🎯',
+                'xls': '📊', 'xlsx': '📊',
+                'jpg': '🖼️', 'jpeg': '🖼️', 'png': '🖼️',
+                'py': '🐍', 'js': '🟨', 'html': '🌐', 'css': '🎨',
+                'cpp': '⚙️', 'c': '⚙️', 'java': '☕',
+                'zip': '📦', 'rar': '📦', '7z': '📦',
+                'txt': '📄', 'md': '📝'
+            };
+            
+            return extensionIcons[extension] || categoryIcons[category] || '📄';
+        }
+
+        function formatFileSize(bytes) {
+            if (!bytes) return '0 B';
+            
+            const k = 1024;
+            const sizes = ['B', 'KB', 'MB', 'GB'];
+            const i = Math.floor(Math.log(bytes) / Math.log(k));
+            
+            return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + ' ' + sizes[i];
+        }
+
+        function formatDate(dateString) {
+            const date = new Date(dateString);
+            const now = new Date();
+            const diffTime = now - date;
+            const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+            
+            if (diffDays === 0) {
+                return 'Hoy';
+            } else if (diffDays === 1) {
+                return 'Ayer';
+            } else if (diffDays < 7) {
+                return `Hace ${diffDays} días`;
+            } else {
+                return date.toLocaleDateString('es-ES', {
+                    day: 'numeric',
+                    month: 'short',
+                    year: 'numeric'
+                });
+            }
+        }
+
+        function updateStats() {
+            const totalFilesElement = document.getElementById('totalFiles');
+            totalFilesElement.textContent = files.length;
+        }
+
+        async function downloadFile(fileId, filePath, fileName) {
             try {
+                debugLog(`Descargando archivo: ${fileName}`);
+                
                 const { data, error } = await supabase.storage
                     .from('university-files')
                     .download(filePath);
-
+                
                 if (error) {
                     throw error;
                 }
-
-                // Crear URL para descarga
+                
+                // Crear URL de descarga
                 const url = URL.createObjectURL(data);
                 const a = document.createElement('a');
                 a.href = url;
@@ -1008,97 +1176,52 @@ function getFileIcon(fileName) {
                 document.body.removeChild(a);
                 URL.revokeObjectURL(url);
                 
+                debugLog(`Archivo descargado: ${fileName}`);
+                
             } catch (error) {
-                debugLog(`❌ Error descargando ${fileName}:`, error);
-                alert(`Error descargando el archivo: ${error.message}`);
+                debugLog(`Error descargando ${fileName}:`, error);
+                alert(`Error al descargar el archivo: ${error.message}`);
             }
         }
 
-        async function deleteFile(fileId, filePath) {
-            if (!confirm('¿Estás seguro de que quieres eliminar este archivo?')) {
+        async function deleteFile(fileId, filePath, fileName) {
+            if (!confirm(`¿Estás seguro de que quieres eliminar "${fileName}"?`)) {
                 return;
             }
-
+            
             try {
-                // Eliminar de storage
-                const { error: storageError } = await supabase.storage
-                    .from('university-files')
-                    .remove([filePath]);
-
-                if (storageError) {
-                    debugLog('⚠️ Error eliminando de storage:', storageError);
-                }
-
-                // Eliminar de base de datos
+                debugLog(`Eliminando archivo: ${fileName}`);
+                
+                // Eliminar de la base de datos
                 const { error: dbError } = await supabase
                     .from('files')
                     .delete()
                     .eq('id', fileId);
-
+                
                 if (dbError) {
                     throw dbError;
                 }
-
-                debugLog(`✅ Archivo eliminado: ${filePath}`);
-                loadFiles();
+                
+                // Eliminar del storage
+                const { error: storageError } = await supabase.storage
+                    .from('university-files')
+                    .remove([filePath]);
+                
+                if (storageError) {
+                    debugLog(`Advertencia eliminando del storage:`, storageError);
+                    // No es crítico si falla el storage
+                }
+                
+                debugLog(`Archivo eliminado: ${fileName}`);
+                
+                // Recargar archivos
+                await loadFiles();
                 
             } catch (error) {
-                debugLog(`❌ Error eliminando archivo:`, error);
-                alert(`Error eliminando el archivo: ${error.message}`);
+                debugLog(`Error eliminando ${fileName}:`, error);
+                alert(`Error al eliminar el archivo: ${error.message}`);
             }
         }
-    </script>
-    <script>
-        function getFileColor(fileName) {
-    const extension = fileName.split('.').pop().toLowerCase();
-    const colors = {
-        // Python
-        py: '#3776ab',
-        
-        // Web
-        html: '#e34c26',
-        css: '#1572b6',
-        js: '#f7df1e',
-        jsx: '#61dafb',
-        tsx: '#61dafb',
-        vue: '#4fc08d',
-        
-        // Backend
-        php: '#777bb4',
-        java: '#ed8b00',
-        cpp: '#00599c',
-        c: '#a8b9cc',
-        cs: '#239120',
-        rb: '#cc342d',
-        go: '#00add8',
-        swift: '#fa7343',
-        
-        // Base de datos
-        sql: '#336791',
-        
-        // Otros
-        json: '#292929',
-        md: '#083fa1',
-        sh: '#89e051'
-    };
-    return colors[extension] || '#667eea';
-}
-function getCategoryDisplayName(category) {
-    const names = {
-        'apuntes': 'Apuntes',
-        'examenes': 'Exámenes',
-        'trabajos': 'Trabajos',
-        'libros': 'Libros',
-        'presentaciones': 'Presentaciones',
-        'codigo': 'Código',
-        'otros': 'Otros'
-    };
-    return names[category] || category;
-}
-
-    </script>
-    <script>
-        
     </script>
 </body>
 </html>
