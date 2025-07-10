@@ -809,9 +809,34 @@
             transform: translateY(-2px);
             box-shadow: 0 12px 30px rgba(0, 0, 0, 0.2);
         }
+        .btn-alt {
+  background-color: #1a202c;
+  color: #fff;
+  border: none;
+  border-radius: 12px;
+  padding: 12px 28px;
+  font-size: 16px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+}
+
+.btn-alt:hover {
+  background-color: #2d3748;
+  transform: translateY(-2px);
+}
+
+.btn-alt i {
+  font-size: 18px;
+}
     </style>
 </head>
 <body>
+    
         <!-- Partículas estilo PlayStation -->
     <div class="ps3-particles" id="ps3Particles"></div>
     
@@ -820,7 +845,12 @@
                         <div class="reloj-container">
                 <span class="reloj-icon">🕒</span>
                 <span id="relojZonaHoraria">Cargando hora...</span>
+                
             </div>
+            
+            <button class="btn-alt" onclick="window.open('tempFilesV2.html', '_blank')">
+  <i class="fas fa-arrow-right"></i> TempFiles V2
+</button>
 
             <h1>Temp Files</h1>
 <div class="watermark">
