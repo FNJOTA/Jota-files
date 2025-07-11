@@ -3,9 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Temp Files Oficial</title>
+    <link rel="icon" type="image/png" href="logo/logo.png">
+    <title>Temp Files V.2</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/flatpickr/4.6.13/flatpickr.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/flatpickr/4.6.13/flatpickr.min.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
@@ -44,20 +46,38 @@
             font-size: 2.5em;
         }
 
-        .user-info {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-top: 15px;
+        .connection-status {
+            text-align: center;
+            padding: 10px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            font-weight: 600;
         }
 
-        .login-form {
+        .connection-status.connected {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .connection-status.disconnected {
+            background: #f8d7da;
+            color: #721c24;
+        }
+
+        .connection-status.connecting {
+            background: #fff3cd;
+            color: #856404;
+        }
+
+        .user-form {
             display: flex;
             gap: 10px;
             align-items: center;
+            justify-content: center;
+            margin-bottom: 20px;
         }
 
-        .login-form input {
+        .user-form input {
             padding: 10px 15px;
             border: 2px solid #e2e8f0;
             border-radius: 8px;
@@ -66,7 +86,7 @@
             transition: all 0.3s ease;
         }
 
-        .login-form input:focus {
+        .user-form input:focus {
             border-color: #667eea;
             box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
         }
@@ -427,43 +447,6 @@
             border-left: 4px solid #667eea;
         }
 
-        .pdf-viewer {
-            width: 100%;
-            height: 600px;
-            border: 2px solid #e2e8f0;
-            border-radius: 8px;
-            overflow: hidden;
-        }
-
-        .pdf-controls {
-            display: flex;
-            gap: 10px;
-            margin-bottom: 10px;
-            align-items: center;
-        }
-
-        .pdf-controls button {
-            padding: 8px 16px;
-            background: #667eea;
-            color: white;
-            border: none;
-            border-radius: 6px;
-            cursor: pointer;
-        }
-
-        .pdf-controls span {
-            margin: 0 10px;
-            font-weight: 600;
-        }
-
-        .calendar-item {
-            padding: 10px;
-            margin: 5px 0;
-            background: rgba(102, 126, 234, 0.1);
-            border-radius: 8px;
-            border-left: 4px solid #667eea;
-        }
-
         .success-message {
             background: #d4edda;
             color: #155724;
@@ -488,6 +471,27 @@
             font-style: italic;
         }
 
+        .realtime-indicator {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: #38a169;
+            color: white;
+            padding: 8px 16px;
+            border-radius: 25px;
+            font-size: 12px;
+            font-weight: 600;
+            z-index: 1000;
+        }
+
+        .realtime-indicator.syncing {
+            background: #f59e0b;
+        }
+
+        .realtime-indicator.error {
+            background: #e53e3e;
+        }
+
         @media (max-width: 768px) {
             .container {
                 padding: 10px;
@@ -509,105 +513,111 @@
     </style>
 </head>
 <body>
+    <div class="realtime-indicator" id="realtimeIndicator">
+        <i class="fas fa-circle"></i> Conectando...
+    </div>
+<button class="btn" onclick="window.open('https://wktaer.github.io/Jota-files/')">Old Temp </button>
+
     <div class="container">
         <div class="header">
-            <h1><i class="fas fa-graduation-cap"></i> Temp Files Tester</h1>
-            <div class="user-info">
-                <div id="loginForm" class="login-form">
-                    <input type="text" id="userName" placeholder="Ingresa tu nombre">
-                    <button class="btn" onclick="login()">Ingresar</button>
-                </div>
-                <div id="userInfo" class="hidden">
-                    <span>Bienvenido, <strong id="currentUser"></strong></span>
-                    <button class="btn btn-danger" onclick="logout()">Salir</button>
-                </div>
+            
+            <h1><img src="https://i.ibb.co/x8s51dBF/IMG-20250709-235917.png" alt="Sticker" style="height: 80px; vertical-align: middle; border-radius: 15px;">
+</i> Temp Files V.2</h1>
+
+
+            <div class="connection-status connecting" id="connectionStatus">
+                <i class="fas fa-circle-notch fa-spin"></i> Conectando a tiempo real...
+            </div>
+            <div class="user-form">
+                <input type="text" id="userName" placeholder="Made in jota">
+                <button class="btn" onclick="setUserName()">Establecer nombre</button>
             </div>
         </div>
 
-        <div id="mainContent" class="hidden">
-            <div class="tabs">
-                <button class="tab active" onclick="showTab('files')">
-                    <i class="fas fa-folder"></i> Archivos
-                </button>
-                <button class="tab" onclick="showTab('notes')">
-                    <i class="fas fa-sticky-note"></i> Notas
-                </button>
-                <button class="tab" onclick="showTab('links')">
-                    <i class="fas fa-link"></i> Enlaces
-                </button>
-                <button class="tab" onclick="showTab('calendar')">
-                    <i class="fas fa-calendar"></i> Calendario
-                </button>
+        <div class="tabs">
+            <button class="tab active" onclick="showTab('files')">
+                <i class="fas fa-folder"></i> Archivos
+            </button>
+            <button class="tab" onclick="showTab('notes')">
+                <i class="fas fa-sticky-note"></i> Notas
+            </button>
+            <button class="tab" onclick="showTab('links')">
+                <i class="fas fa-link"></i> Enlaces
+            </button>
+            <button class="tab" onclick="showTab('calendar')">
+                <i class="fas fa-calendar"></i> Calendario
+            </button>
+            
+        </div>
+
+        <div class="content">
+            <div id="messages"></div>
+            
+            <div class="search-filters">
+                <input type="text" id="searchInput" placeholder="Buscar..." onkeyup="performSearch()">
+                <select id="folderFilter" onchange="performSearch()">
+                    <option value="">Todas las carpetas</option>
+                </select>
+                <select id="typeFilter" onchange="performSearch()">
+                    <option value="">Todos los tipos</option>
+                    <option value="pdf">PDF</option>
+                    <option value="image">Imágenes</option>
+                    <option value="document">Documentos</option>
+                    <option value="other">Otros</option>
+                </select>
+                <input type="text" id="subjectFilter" placeholder="Materia..." onkeyup="performSearch()">
             </div>
 
-            <div class="content">
-                <div id="messages"></div>
+            
+            <div id="filesTab" class="tab-content">
+                <div class="folder-tree" id="folderTree"></div>
                 
-                <div class="search-filters">
-                    <input type="text" id="searchInput" placeholder="Buscar..." onkeyup="performSearch()">
-                    <select id="folderFilter" onchange="performSearch()">
-                        <option value="">Todas las carpetas</option>
-                    </select>
-                    <select id="typeFilter" onchange="performSearch()">
-                        <option value="">Todos los tipos</option>
-                        <option value="pdf">PDF</option>
-                        <option value="image">Imágenes</option>
-                        <option value="document">Documentos</option>
-                        <option value="other">Otros</option>
-                    </select>
-                    <input type="text" id="subjectFilter" placeholder="Materia..." onkeyup="performSearch()">
-                </div>
-
-                <!-- Tab de Archivos -->
-                <div id="filesTab" class="tab-content">
-                    <div class="folder-tree" id="folderTree"></div>
-                    
-                    <div style="display: flex; gap: 10px; margin-bottom: 20px; flex-wrap: wrap;">
-                        <button class="btn" onclick="openModal('folderModal')">
-                            <i class="fas fa-folder-plus"></i> Nueva Carpeta
-                        </button>
-                        <button class="btn btn-secondary" onclick="openModal('uploadModal')">
-                            <i class="fas fa-upload"></i> Subir Archivo
-                        </button>
-                    </div>
-
-                    <div class="upload-area" id="uploadArea">
-                        <i class="fas fa-cloud-upload-alt" style="font-size: 3em; color: #cbd5e0; margin-bottom: 20px;"></i>
-                        <p>Arrastra archivos aquí o haz clic para seleccionar</p>
-                        <input type="file" id="fileInput" multiple style="display: none;">
-                    </div>
-
-                    <div id="filesGrid" class="files-grid"></div>
-                </div>
-
-                <!-- Tab de Notas -->
-                <div id="notesTab" class="tab-content hidden">
-                    <button class="btn" onclick="openModal('noteModal')" style="margin-bottom: 20px;">
-                        <i class="fas fa-plus"></i> Nueva Nota
+                <div style="display: flex; gap: 10px; margin-bottom: 20px; flex-wrap: wrap;">
+                    <button class="btn" onclick="openModal('folderModal')">
+                        <i class="fas fa-folder-plus"></i> Nueva Carpeta
                     </button>
-                    <div id="notesGrid" class="notes-grid"></div>
-                </div>
-
-                <!-- Tab de Enlaces -->
-                <div id="linksTab" class="tab-content hidden">
-                    <button class="btn" onclick="openModal('linkModal')" style="margin-bottom: 20px;">
-                        <i class="fas fa-plus"></i> Nuevo Enlace
+                    <button class="btn btn-secondary" onclick="openModal('uploadModal')">
+                        <i class="fas fa-upload"></i> Subir Archivo
                     </button>
-                    <div id="linksList" class="links-list"></div>
                 </div>
 
-                <!-- Tab de Calendario -->
-                <div id="calendarTab" class="tab-content hidden">
-                    <div class="calendar-container">
-                        <input type="text" id="calendarPicker" placeholder="Selecciona una fecha">
-                        <div id="calendarContent" style="margin-top: 20px;"></div>
-                    </div>
+                <div class="upload-area" id="uploadArea">
+                    <i class="fas fa-cloud-upload-alt" style="font-size: 3em; color: #cbd5e0; margin-bottom: 20px;"></i>
+                    <p>Arrastra archivos aquí o haz clic para seleccionar</p>
+                    <input type="file" id="fileInput" multiple style="display: none;">
+                </div>
+
+                <div id="filesGrid" class="files-grid"></div>
+            </div>
+
+         
+    
+            <div id="notesTab" class="tab-content hidden">
+                <button class="btn" onclick="openModal('noteModal')" style="margin-bottom: 20px;">
+                    <i class="fas fa-plus"></i> Nueva Nota
+                </button>
+                <div id="notesGrid" class="notes-grid"></div>
+            </div>
+
+            
+            <div id="linksTab" class="tab-content hidden">
+                <button class="btn" onclick="openModal('linkModal')" style="margin-bottom: 20px;">
+                    <i class="fas fa-plus"></i> Nuevo Enlace
+                </button>
+                <div id="linksList" class="links-list"></div>
+            </div>
+
+           
+            <div id="calendarTab" class="tab-content hidden">
+                <div class="calendar-container">
+                    <input type="text" id="calendarPicker" placeholder="Selecciona una fecha">
+                    <div id="calendarContent" style="margin-top: 20px;"></div>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- Modales -->
+    <!-- Ricardo basta de errores porfavor -->
     <div id="folderModal" class="modal">
         <div class="modal-content">
             <div class="modal-header">
@@ -625,6 +635,10 @@
             <div class="form-group">
                 <label>Color:</label>
                 <input type="color" id="folderColor" value="#667eea">
+            </div>
+            <div class="form-group">
+                <label>Creado por:</label>
+                <input type="text" id="folderCreatedBy" placeholder="Tu nombre">
             </div>
             <button class="btn" onclick="createFolder()">Crear Carpeta</button>
         </div>
@@ -658,6 +672,10 @@
                 <label>Fecha asociada:</label>
                 <input type="date" id="uploadDate">
             </div>
+            <div class="form-group">
+                <label>Subido por:</label>
+                <input type="text" id="uploadCreatedBy" placeholder="Tu nombre">
+            </div>
             <button class="btn" onclick="uploadFiles()">Subir Archivos</button>
         </div>
     </div>
@@ -687,6 +705,10 @@
             <div class="form-group">
                 <label>Fecha asociada:</label>
                 <input type="date" id="noteDate">
+            </div>
+            <div class="form-group">
+                <label>Creado por:</label>
+                <input type="text" id="noteCreatedBy" placeholder="Tu nombre">
             </div>
             <button class="btn" onclick="createNote()">Crear Nota</button>
         </div>
@@ -718,6 +740,10 @@
                 <label>Etiquetas (separadas por coma):</label>
                 <input type="text" id="linkTags" placeholder="Ej: tutorial, documentación">
             </div>
+            <div class="form-group">
+                <label>Creado por:</label>
+                <input type="text" id="linkCreatedBy" placeholder="Tu nombre">
+            </div>
             <button class="btn" onclick="createLink()">Guardar Enlace</button>
         </div>
     </div>
@@ -735,13 +761,24 @@
                 <button onclick="zoomIn()">Zoom +</button>
                 <button onclick="zoomOut()">Zoom -</button>
             </div>
+            
             <div id="fileViewer" style="text-align: center; max-height: 70vh; overflow: auto;"></div>
+        
         </div>
+        
     </div>
 
     <script>
+        // **IMPORTANTE: Configura tus credenciales de Supabase aquí**
+        const SUPABASE_URL = 'https://qatszwczpoqnjekegguj.supabase.co';
+        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFhdHN6d2N6cG9xbmpla2VnZ3VqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTIxMTgwMTIsImV4cCI6MjA2NzY5NDAxMn0.odRMJOg8t7zMWyAD9sLb8wipHO6iNs6lC1E7SKRyaEY';
+        
+        // Inicializar Supabase
+        const { createClient } = supabase;
+        let supabaseClient;
+        
         // Variables globales
-        let currentUser = null;
+        let currentUser = 'Usuario';
         let currentFolder = null;
         let currentPdf = null;
         let currentPage = 1;
@@ -750,26 +787,136 @@
         let files = [];
         let notes = [];
         let links = [];
+        let isConnected = false;
 
         // Configurar PDF.js
         pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
 
         // Inicialización
         document.addEventListener('DOMContentLoaded', function() {
+            initializeSupabase();
             setupEventListeners();
             setupCalendar();
-            
-            // Verificar si hay usuario guardado
-            const savedUser = localStorage.getItem('currentUser');
-            if (savedUser) {
-                currentUser = savedUser;
-                document.getElementById('currentUser').textContent = currentUser;
-                document.getElementById('loginForm').classList.add('hidden');
-                document.getElementById('userInfo').classList.remove('hidden');
-                document.getElementById('mainContent').classList.remove('hidden');
-                loadData();
-            }
+            loadUserName();
         });
+
+        async function initializeSupabase() {
+            try {
+                if (!SUPABASE_URL || !SUPABASE_ANON_KEY || SUPABASE_URL.includes('TU_SUPABASE_URL_AQUI')) {
+                    throw new Error('Configuración de Supabase requerida');
+                }
+
+                supabaseClient = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+                
+                // Probar conexión
+                const { data, error } = await supabaseClient.from('folders').select('count');
+                
+                if (error && error.code === 'PGRST116') {
+                    // Las tablas no existen, crearlas
+                    await createTables();
+                }
+                
+                updateConnectionStatus('connected');
+                loadAllData();
+                setupRealtimeSubscriptions();
+                
+            } catch (error) {
+                console.error('Error inicializando Supabase:', error);
+                updateConnectionStatus('error');
+                showMessage('Error: ' + error.message + '\n\nPor favor configura tus credenciales de Supabase en el código.', 'error');
+            }
+        }
+
+        async function createTables() {
+            const createFoldersTable = `
+                CREATE TABLE IF NOT EXISTS folders (
+                    id BIGINT PRIMARY KEY,
+                    name TEXT NOT NULL,
+                    description TEXT,
+                    color TEXT DEFAULT '#667eea',
+                    created_by TEXT NOT NULL,
+                    created_at TIMESTAMP DEFAULT NOW()
+                );
+            `;
+            
+            const createFilesTable = `
+                CREATE TABLE IF NOT EXISTS files (
+                    id BIGINT PRIMARY KEY,
+                    name TEXT NOT NULL,
+                    size BIGINT NOT NULL,
+                    type TEXT NOT NULL,
+                    folder_id BIGINT,
+                    subject TEXT,
+                    tags TEXT[],
+                    date DATE,
+                    uploaded_by TEXT NOT NULL,
+                    uploaded_at TIMESTAMP DEFAULT NOW(),
+                    file_data TEXT NOT NULL
+                );
+            `;
+            
+            const createNotesTable = `
+                CREATE TABLE IF NOT EXISTS notes (
+                    id BIGINT PRIMARY KEY,
+                    title TEXT NOT NULL,
+                    content TEXT NOT NULL,
+                    tags TEXT[],
+                    subject TEXT,
+                    date DATE,
+                    created_by TEXT NOT NULL,
+                    created_at TIMESTAMP DEFAULT NOW()
+                );
+            `;
+            
+            const createLinksTable = `
+                CREATE TABLE IF NOT EXISTS links (
+                    id BIGINT PRIMARY KEY,
+                    title TEXT NOT NULL,
+                    url TEXT NOT NULL,
+                    description TEXT,
+                    subject TEXT,tags TEXT[],
+                    created_by TEXT NOT NULL,
+                    created_at TIMESTAMP DEFAULT NOW()
+                );
+            `;
+
+            // Nota: En un entorno real, necesitarías ejecutar estos comandos SQL
+            // directamente en tu base de datos de Supabase
+            console.log('Tablas SQL para crear:', { createFoldersTable, createFilesTable, createNotesTable, createLinksTable });
+        }
+
+        function updateConnectionStatus(status) {
+            const statusElement = document.getElementById('connectionStatus');
+            const indicator = document.getElementById('realtimeIndicator');
+            
+            statusElement.className = `connection-status ${status}`;
+            
+            switch(status) {
+                case 'connected':
+                    statusElement.innerHTML = '<i class="fas fa-check-circle"></i> Conectado en tiempo real';
+                    indicator.innerHTML = '<i class="fas fa-circle"></i> Conectado';
+                    indicator.className = 'realtime-indicator';
+                    isConnected = true;
+                    break;
+                case 'disconnected':
+                    statusElement.innerHTML = '<i class="fas fa-times-circle"></i> Desconectado';
+                    indicator.innerHTML = '<i class="fas fa-circle"></i> Desconectado';
+                    indicator.className = 'realtime-indicator error';
+                    isConnected = false;
+                    break;
+                case 'error':
+                    statusElement.innerHTML = '<i class="fas fa-exclamation-triangle"></i> Error de conexión';
+                    indicator.innerHTML = '<i class="fas fa-circle"></i> Error';
+                    indicator.className = 'realtime-indicator error';
+                    isConnected = false;
+                    break;
+                default:
+                    statusElement.innerHTML = '<i class="fas fa-circle-notch fa-spin"></i> Conectando...';
+                    indicator.innerHTML = '<i class="fas fa-circle"></i> Conectando...';
+                    indicator.className = 'realtime-indicator syncing';
+                    isConnected = false;
+            }
+        }
 
         function setupEventListeners() {
             // Drag and drop
@@ -787,215 +934,475 @@
             uploadArea.addEventListener('drop', (e) => {
                 e.preventDefault();
                 uploadArea.classList.remove('dragover');
-                const files = e.dataTransfer.files;
-                handleFileUpload(files);
+                handleFileUpload(e.dataTransfer.files);
             });
 
             fileInput.addEventListener('change', (e) => {
                 handleFileUpload(e.target.files);
             });
 
-            // Enter key para login
-            document.getElementById('userName').addEventListener('keypress', function(e) {
-                if (e.key === 'Enter') {
-                    login();
+            // Cerrar modales al hacer clic fuera
+            window.addEventListener('click', (e) => {
+                if (e.target.classList.contains('modal')) {
+                    e.target.style.display = 'none';
                 }
             });
         }
 
         function setupCalendar() {
             flatpickr("#calendarPicker", {
-                onChange: function(selectedDates, dateStr, instance) {
-                    loadCalendarData(dateStr);
-                },
-                inline: false,
+                inline: true,
+                locale: "es",
                 dateFormat: "Y-m-d",
-                locale: "es"
+                onChange: function(selectedDates, dateStr, instance) {
+                    loadCalendarEvents(dateStr);
+                }
             });
         }
 
-        // Funciones de mensajes
-        function showMessage(message, type = 'success') {
-            const messagesDiv = document.getElementById('messages');
-            const messageElement = document.createElement('div');
-            messageElement.className = type === 'success' ? 'success-message' : 'error-message';
-            messageElement.textContent = message;
-            messagesDiv.appendChild(messageElement);
-            
-            setTimeout(() => {
-                messageElement.remove();
-            }, 3000);
-        }
-
-        // Funciones de autenticación
-        function login() {
-            const userName = document.getElementById('userName').value.trim();
-            if (!userName) {
-                showMessage('Por favor ingresa tu nombre', 'error');
-                return;
+        function loadUserName() {
+            const savedName = localStorage.getItem('tempFilesUserName');
+            if (savedName) {
+                currentUser = savedName;
+                document.getElementById('userName').value = savedName;
             }
-
-            currentUser = userName;
-            localStorage.setItem('currentUser', currentUser);
-            
-            document.getElementById('currentUser').textContent = currentUser;
-            document.getElementById('loginForm').classList.add('hidden');
-            document.getElementById('userInfo').classList.remove('hidden');
-            document.getElementById('mainContent').classList.remove('hidden');
-            
-            loadData();
-            showMessage('¡Bienvenido! Todos los datos son compartidos entre usuarios.');
         }
 
-        function logout() {
-            currentUser = null;
-            localStorage.removeItem('currentUser');
-            
-            document.getElementById('loginForm').classList.remove('hidden');
-            document.getElementById('userInfo').classList.add('hidden');
-            document.getElementById('mainContent').classList.add('hidden');
-            document.getElementById('userName').value = '';
-            
-            // Limpiar datos locales (no del almacenamiento)
-            folders = [];
-            files = [];
-            notes = [];
-            links = [];
+        function setUserName() {
+            const nameInput = document.getElementById('userName');
+            const name = nameInput.value.trim();
+            if (name) {
+                currentUser = name;
+                localStorage.setItem('tempFilesUserName', name);
+                showMessage('Nombre establecido: ' + name, 'success');
+            }
         }
 
-        // Funciones de navegación
+        async function loadAllData() {
+            try {
+                updateConnectionStatus('connecting');
+                await Promise.all([
+                    loadFolders(),
+                    loadFiles(),
+                    loadNotes(),
+                    loadLinks()
+                ]);
+                updateConnectionStatus('connected');
+            } catch (error) {
+                console.error('Error cargando datos:', error);
+                updateConnectionStatus('error');
+                showMessage('Error cargando datos: ' + error.message, 'error');
+            }
+        }
+
+        async function loadFolders() {
+            if (!supabaseClient) return;
+            
+            try {
+                const { data, error } = await supabaseClient
+                    .from('folders')
+                    .select('*')
+                    .order('created_at', { ascending: false });
+
+                if (error) throw error;
+                
+                folders = data || [];
+                renderFolderTree();
+                updateFolderSelects();
+            } catch (error) {
+                console.error('Error cargando carpetas:', error);
+                folders = [];
+            }
+        }
+
+        async function loadFiles() {
+            if (!supabaseClient) return;
+            
+            try {
+                const { data, error } = await supabaseClient
+                    .from('files')
+                    .select('*')
+                    .order('uploaded_at', { ascending: false });
+
+                if (error) throw error;
+                
+                files = data || [];
+                renderFiles();
+            } catch (error) {
+                console.error('Error cargando archivos:', error);
+                files = [];
+            }
+        }
+
+        async function loadNotes() {
+            if (!supabaseClient) return;
+            
+            try {
+                const { data, error } = await supabaseClient
+                    .from('notes')
+                    .select('*')
+                    .order('created_at', { ascending: false });
+
+                if (error) throw error;
+                
+                notes = data || [];
+                renderNotes();
+            } catch (error) {
+                console.error('Error cargando notas:', error);
+                notes = [];
+            }
+        }
+
+        async function loadLinks() {
+            if (!supabaseClient) return;
+            
+            try {
+                const { data, error } = await supabaseClient
+                    .from('links')
+                    .select('*')
+                    .order('created_at', { ascending: false });
+
+                if (error) throw error;
+                
+                links = data || [];
+                renderLinks();
+            } catch (error) {
+                console.error('Error cargando enlaces:', error);
+                links = [];
+            }
+        }
+
+        function setupRealtimeSubscriptions() {
+            if (!supabaseClient) return;
+
+            // Suscripción a cambios en carpetas
+            supabaseClient
+                .channel('folders')
+                .on('postgres_changes', { event: '*', schema: 'public', table: 'folders' }, () => {
+                    loadFolders();
+                })
+                .subscribe();
+
+            // Suscripción a cambios en archivos
+            supabaseClient
+                .channel('files')
+                .on('postgres_changes', { event: '*', schema: 'public', table: 'files' }, () => {
+                    loadFiles();
+                })
+                .subscribe();
+
+            // Suscripción a cambios en notas
+            supabaseClient
+                .channel('notes')
+                .on('postgres_changes', { event: '*', schema: 'public', table: 'notes' }, () => {
+                    loadNotes();
+                })
+                .subscribe();
+
+            // Suscripción a cambios en enlaces
+            supabaseClient
+                .channel('links')
+                .on('postgres_changes', { event: '*', schema: 'public', table: 'links' }, () => {
+                    loadLinks();
+                })
+                .subscribe();
+        }
+
         function showTab(tabName) {
             // Ocultar todas las pestañas
             document.querySelectorAll('.tab-content').forEach(tab => {
                 tab.classList.add('hidden');
             });
-            
-            // Remover clase activa de todos los botones
-            document.querySelectorAll('.tab').forEach(btn => {
-                btn.classList.remove('active');
+
+            // Mostrar la pestaña seleccionada
+            document.getElementById(tabName + 'Tab').classList.remove('hidden');
+
+            // Actualizar botones de pestañas
+            document.querySelectorAll('.tab').forEach(tab => {
+                tab.classList.remove('active');
             });
-            
-            // Mostrar pestaña seleccionada
-            document.getElementById (tabName + 'Tab').classList.remove('hidden');
-            
-            // Activar botón correspondiente
             event.target.classList.add('active');
+        }
+
+        function openModal(modalId) {
+            document.getElementById(modalId).style.display = 'block';
             
-            // Cargar datos según la pestaña
-            switch(tabName) {
-                case 'files':
-                    loadFiles();
-                    break;
-                case 'notes':
-                    loadNotes();
-                    break;
-                case 'links':
-                    loadLinks();
-                    break;
-                case 'calendar':
-                    loadCalendarData();
-                    break;
-            }
+            // Pre-llenar campos con el usuario actual
+            const createdByFields = document.querySelectorAll('[id$="CreatedBy"]');
+            createdByFields.forEach(field => {
+                if (!field.value) {
+                    field.value = currentUser;
+                }
+            });
         }
 
-        // Funciones de carga de datos
-        function loadData() {
-            loadFolders();
-            loadFiles();
-            loadNotes();
-            loadLinks();
-            updateFolderFilters();
+        function closeModal(modalId) {
+            document.getElementById(modalId).style.display = 'none';
         }
 
-        function loadFolders() {
-            const savedFolders = localStorage.getItem('tempFiles_folders');
-            folders = savedFolders ? JSON.parse(savedFolders) : [];
-            renderFolderTree();
-        }
-
-        function loadFiles() {
-            const savedFiles = localStorage.getItem('tempFiles_files');
-            files = savedFiles ? JSON.parse(savedFiles) : [];
-            renderFiles();
-        }
-
-        function loadNotes() {
-            const savedNotes = localStorage.getItem('tempFiles_notes');
-            notes = savedNotes ? JSON.parse(savedNotes) : [];
-            renderNotes();
-        }
-
-        function loadLinks() {
-            const savedLinks = localStorage.getItem('tempFiles_links');
-            links = savedLinks ? JSON.parse(savedLinks) : [];
-            renderLinks();
-        }
-
-        // Funciones de guardado
-        function saveFolders() {
-            localStorage.setItem('tempFiles_folders', JSON.stringify(folders));
-        }
-
-        function saveFiles() {
-            localStorage.setItem('tempFiles_files', JSON.stringify(files));
-        }
-
-        function saveNotes() {
-            localStorage.setItem('tempFiles_notes', JSON.stringify(notes));
-        }
-
-        function saveLinks() {
-            localStorage.setItem('tempFiles_links', JSON.stringify(links));
-        }
-
-        // Funciones de carpetas
-        function createFolder() {
-            const name = document.getElementById('folderName').value.trim();
-            const description = document.getElementById('folderDescription').value.trim();
-            const color = document.getElementById('folderColor').value;
-
-            if (!name) {
-                showMessage('Por favor ingresa un nombre para la carpeta', 'error');
+        async function createFolder() {
+            if (!supabaseClient) {
+                showMessage('Error: No hay conexión con la base de datos', 'error');
                 return;
             }
 
-            const folder = {
-                id: Date.now(),
-                name: name,
-                description: description,
-                color: color,
-                createdBy: currentUser,
-                createdAt: new Date().toISOString()
-            };
+            const name = document.getElementById('folderName').value.trim();
+            const description = document.getElementById('folderDescription').value.trim();
+            const color = document.getElementById('folderColor').value;
+            const createdBy = document.getElementById('folderCreatedBy').value.trim() || currentUser;
 
-            folders.push(folder);
-            saveFolders();
-            renderFolderTree();
-            updateFolderFilters();
-            closeModal('folderModal');
-            showMessage('Carpeta creada exitosamente');
+            if (!name) {
+                showMessage('El nombre de la carpeta es requerido', 'error');
+                return;
+            }
+
+            try {
+                const { data, error } = await supabaseClient
+                    .from('folders')
+                    .insert([{
+                        name: name,
+                        description: description,
+                        color: color,
+                        created_by: createdBy
+                    }]);
+
+                if (error) throw error;
+
+                showMessage('Carpeta creada exitosamente', 'success');
+                closeModal('folderModal');
+                
+                // Limpiar formulario
+                document.getElementById('folderName').value = '';
+                document.getElementById('folderDescription').value = '';
+                document.getElementById('folderColor').value = '#667eea';
+                document.getElementById('folderCreatedBy').value = '';
+                
+                loadFolders();
+            } catch (error) {
+                console.error('Error creando carpeta:', error);
+                showMessage('Error creando carpeta: ' + error.message, 'error');
+            }
+        }
+
+        async function handleFileUpload(fileList) {
+            const files = Array.from(fileList);
             
-            // Limpiar formulario
-            document.getElementById('folderName').value = '';
-            document.getElementById('folderDescription').value = '';
-            document.getElementById('folderColor').value = '#667eea';
+            for (const file of files) {
+                await uploadSingleFile(file);
+            }
+        }
+
+        async function uploadSingleFile(file) {
+            if (!supabaseClient) {
+                showMessage('Error: No hay conexión con la base de datos', 'error');
+                return;
+            }
+
+            try {
+                // Convertir archivo a base64
+                const fileData = await fileToBase64(file);
+                
+                const { data, error } = await supabaseClient
+                    .from('files')
+                    .insert([{
+                        name: file.name,
+                        size: file.size,
+                        type: file.type,
+                        folder_id: currentFolder,
+                        subject: '',
+                        tags: [],
+                        date: null,
+                        uploaded_by: currentUser,
+                        file_data: fileData
+                    }]);
+
+                if (error) throw error;
+
+                showMessage(`Archivo ${file.name} subido exitosamente`, 'success');
+                loadFiles();
+            } catch (error) {
+                console.error('Error subiendo archivo:', error);
+                showMessage('Error subiendo archivo: ' + error.message, 'error');
+            }
+        }
+
+        async function uploadFiles() {
+            if (!supabaseClient) {
+                showMessage('Error: No hay conexión con la base de datos', 'error');
+                return;
+            }
+
+            const fileInput = document.getElementById('modalFileInput');
+            const files = fileInput.files;
+            const folderId = document.getElementById('uploadFolder').value || null;
+            const subject = document.getElementById('uploadSubject').value.trim();
+            const tags = document.getElementById('uploadTags').value.split(',').map(t => t.trim()).filter(t => t);
+            const date = document.getElementById('uploadDate').value || null;
+            const uploadedBy = document.getElementById('uploadCreatedBy').value.trim() || currentUser;
+
+            if (files.length === 0) {
+                showMessage('Selecciona al menos un archivo', 'error');
+                return;
+            }
+
+            try {
+                for (const file of files) {
+                    const fileData = await fileToBase64(file);
+                    
+                    const { data, error } = await supabaseClient
+                        .from('files')
+                        .insert([{
+                            name: file.name,
+                            size: file.size,
+                            type: file.type,
+                            folder_id: folderId,
+                            subject: subject,
+                            tags: tags,
+                            date: date,
+                            uploaded_by: uploadedBy,
+                            file_data: fileData
+                        }]);
+
+                    if (error) throw error;
+                }
+
+                showMessage('Archivos subidos exitosamente', 'success');
+                closeModal('uploadModal');
+                
+                // Limpiar formulario
+                document.getElementById('modalFileInput').value = '';
+                document.getElementById('uploadFolder').value = '';
+                document.getElementById('uploadSubject').value = '';
+                document.getElementById('uploadTags').value = '';
+                document.getElementById('uploadDate').value = '';
+                document.getElementById('uploadCreatedBy').value = '';
+                
+                loadFiles();
+            } catch (error) {
+                console.error('Error subiendo archivos:', error);
+                showMessage('Error subiendo archivos: ' + error.message, 'error');
+            }
+        }
+
+        async function createNote() {
+            if (!supabaseClient) {
+                showMessage('Error: No hay conexión con la base de datos', 'error');
+                return;
+            }
+
+            const title = document.getElementById('noteTitle').value.trim();
+            const content = document.getElementById('noteContent').value.trim();
+            const tags = document.getElementById('noteTags').value.split(',').map(t => t.trim()).filter(t => t);
+            const subject = document.getElementById('noteSubject').value.trim();
+            const date = document.getElementById('noteDate').value || null;
+            const createdBy = document.getElementById('noteCreatedBy').value.trim() || currentUser;
+
+            if (!title || !content) {
+                showMessage('El título y contenido son requeridos', 'error');
+                return;
+            }
+
+            try {
+                const { data, error } = await supabaseClient
+                    .from('notes')
+                    .insert([{
+                        title: title,
+                        content: content,
+                        tags: tags,
+                        subject: subject,
+                        date: date,
+                        created_by: createdBy
+                    }]);
+
+                if (error) throw error;
+
+                showMessage('Nota creada exitosamente', 'success');
+                closeModal('noteModal');
+                
+                // Limpiar formulario
+                document.getElementById('noteTitle').value = '';
+                document.getElementById('noteContent').value = '';
+                document.getElementById('noteTags').value = '';
+                document.getElementById('noteSubject').value = '';
+                document.getElementById('noteDate').value = '';
+                document.getElementById('noteCreatedBy').value = '';
+                
+                loadNotes();
+            } catch (error) {
+                console.error('Error creando nota:', error);
+                showMessage('Error creando nota: ' + error.message, 'error');
+            }
+        }
+
+        async function createLink() {
+            if (!supabaseClient) {
+                showMessage('Error: No hay conexión con la base de datos', 'error');
+                return;
+            }
+
+            const title = document.getElementById('linkTitle').value.trim();
+            const url = document.getElementById('linkUrl').value.trim();
+            const description = document.getElementById('linkDescription').value.trim();
+            const subject = document.getElementById('linkSubject').value.trim();
+            const tags = document.getElementById('linkTags').value.split(',').map(t => t.trim()).filter(t => t);
+            const createdBy = document.getElementById('linkCreatedBy').value.trim() || currentUser;
+
+            if (!title || !url) {
+                showMessage('El título y URL son requeridos', 'error');
+                return;
+            }
+
+            try {
+                const { data, error } = await supabaseClient
+                    .from('links')
+                    .insert([{
+                        title: title,
+                        url: url,
+                        description: description,
+                        subject: subject,
+                        tags: tags,
+                        created_by: createdBy
+                    }]);
+
+                if (error) throw error;
+
+                showMessage('Enlace guardado exitosamente', 'success');
+                closeModal('linkModal');
+                
+                // Limpiar formulario
+                document.getElementById('linkTitle').value = '';
+                document.getElementById('linkUrl').value = '';
+                document.getElementById('linkDescription').value = '';
+                document.getElementById('linkSubject').value = '';
+                document.getElementById('linkTags').value = '';
+                document.getElementById('linkCreatedBy').value = '';
+                
+                loadLinks();
+            } catch (error) {
+                console.error('Error guardando enlace:', error);
+                showMessage('Error guardando enlace: ' + error.message, 'error');
+            }
         }
 
         function renderFolderTree() {
             const folderTree = document.getElementById('folderTree');
             folderTree.innerHTML = '';
 
+            if (folders.length === 0) {
+                folderTree.innerHTML = '<p>No hay carpetas creadas</p>';
+                return;
+            }
+
             folders.forEach(folder => {
-                const folderItem = document.createElement('div');
-                folderItem.className = 'folder-item';
-                folderItem.style.borderLeftColor = folder.color;
-                folderItem.innerHTML = `
-                    <i class="fas fa-folder" style="color: ${folder.color}"></i>
-                    ${folder.name}
-                    <span class="added-by">por ${folder.createdBy}</span>
+                const folderDiv = document.createElement('div');
+                folderDiv.className = 'folder-item';
+                folderDiv.innerHTML = `
+                    <i class="fas fa-folder" style="color: ${folder.color}; margin-right: 10px;"></i>
+                    <strong>${folder.name}</strong>
+                    <span class="added-by"> - por ${folder.created_by}</span>
                 `;
-                folderItem.onclick = () => selectFolder(folder.id);
-                folderTree.appendChild(folderItem);
+                folderDiv.onclick = () => selectFolder(folder.id);
+                folderTree.appendChild(folderDiv);
             });
         }
 
@@ -1008,145 +1415,212 @@
             performSearch();
         }
 
-        function updateFolderFilters() {
-            const folderFilter = document.getElementById('folderFilter');
-            const uploadFolder = document.getElementById('uploadFolder');
-            
-            // Limpiar opciones
-            folderFilter.innerHTML = '<option value="">Todas las carpetas</option>';
-            uploadFolder.innerHTML = '<option value="">Sin carpeta</option>';
-            
-            folders.forEach(folder => {
-                const option1 = document.createElement('option');
-                option1.value = folder.id;
-                option1.textContent = folder.name;
-                folderFilter.appendChild(option1);
+        function updateFolderSelects() {
+            const selects = document.querySelectorAll('#folderFilter, #uploadFolder');
+            selects.forEach(select => {
+                const currentValue = select.value;
+                select.innerHTML = select.id === 'folderFilter' ? 
+                    '<option value="">Todas las carpetas</option>' : 
+                    '<option value="">Sin carpeta</option>';
                 
-                const option2 = document.createElement('option');
-                option2.value = folder.id;
-                option2.textContent = folder.name;
-                uploadFolder.appendChild(option2);
+                folders.forEach(folder => {
+                    const option = document.createElement('option');
+                    option.value = folder.id;
+                    option.textContent = folder.name;
+                    select.appendChild(option);
+                });
+                
+                select.value = currentValue;
             });
-        }
-
-        // Funciones de archivos
-        function handleFileUpload(filesList) {
-            const uploadFolder = document.getElementById('uploadFolder').value;
-            const uploadSubject = document.getElementById('uploadSubject').value;
-            const uploadTags = document.getElementById('uploadTags').value;
-            const uploadDate = document.getElementById('uploadDate').value;
-
-            Array.from(filesList).forEach(file => {
-                const fileObj = {
-                    id: Date.now() + Math.random(),
-                    name: file.name,
-                    size: file.size,
-                    type: getFileType(file.name),
-                    folderId: uploadFolder || null,
-                    subject: uploadSubject,
-                    tags: uploadTags.split(',').map(tag => tag.trim()).filter(tag => tag),
-                    date: uploadDate,
-                    uploadedBy: currentUser,
-                    uploadedAt: new Date().toISOString(),
-                    data: null
-                };
-
-                // Leer archivo como base64
-                const reader = new FileReader();
-                reader.onload = function(e) {
-                    fileObj.data = e.target.result;
-                    files.push(fileObj);
-                    saveFiles();
-                    renderFiles();
-                    showMessage(`Archivo ${file.name} subido exitosamente`);
-                };
-                reader.readAsDataURL(file);
-            });
-        }
-
-        function uploadFiles() {
-            const fileInput = document.getElementById('modalFileInput');
-            const uploadFolder = document.getElementById('uploadFolder').value;
-            const uploadSubject = document.getElementById('uploadSubject').value;
-            const uploadTags = document.getElementById('uploadTags').value;
-            const uploadDate = document.getElementById('uploadDate').value;
-
-            if (!fileInput.files.length) {
-                showMessage('Por favor selecciona al menos un archivo', 'error');
-                return;
-            }
-
-            // Actualizar campos globales para handleFileUpload
-            document.getElementById('uploadFolder').value = uploadFolder;
-            document.getElementById('uploadSubject').value = uploadSubject;
-            document.getElementById('uploadTags').value = uploadTags;
-            document.getElementById('uploadDate').value = uploadDate;
-
-            handleFileUpload(fileInput.files);
-            closeModal('uploadModal');
-            
-            // Limpiar formulario
-            fileInput.value = '';
-            document.getElementById('uploadFolder').value = '';
-            document.getElementById('uploadSubject').value = '';
-            document.getElementById('uploadTags').value = '';
-            document.getElementById('uploadDate').value = '';
-        }
-
-        function getFileType(filename) {
-            const ext = filename.split('.').pop().toLowerCase();
-            if (['pdf'].includes(ext)) return 'pdf';
-            if (['jpg', 'jpeg', 'png', 'gif', 'bmp'].includes(ext)) return 'image';
-            if (['doc', 'docx', 'txt', 'rtf'].includes(ext)) return 'document';
-            return 'other';
         }
 
         function renderFiles() {
             const filesGrid = document.getElementById('filesGrid');
             filesGrid.innerHTML = '';
 
-            const filteredFiles = getFilteredFiles();
+            if (files.length === 0) {
+                filesGrid.innerHTML = '<p>No hay archivos subidos</p>';
+                return;
+            }
 
-            filteredFiles.forEach(file => {
+            files.forEach(file => {
                 const fileCard = document.createElement('div');
                 fileCard.className = 'file-card';
-                
-                const folder = folders.find(f => f.id == file.folderId);
-                const folderName = folder ? folder.name : 'Sin carpeta';
-                
                 fileCard.innerHTML = `
                     <div class="file-preview">
                         ${getFileIcon(file.type)}
                     </div>
                     <div class="file-info">
                         <h3>${file.name}</h3>
-                        <p><i class="fas fa-folder"></i> ${folderName}</p>
-                        <p><i class="fas fa-book"></i> ${file.subject || 'Sin materia'}</p>
-                        <p><i class="fas fa-calendar"></i> ${file.date || 'Sin fecha'}</p>
-                        <p><i class="fas fa-user"></i> ${file.uploadedBy}</p>
-                        <p><i class="fas fa-file-alt"></i> ${formatFileSize(file.size)}</p>
-                        ${file.tags.length > 0 ? `<div class="note-tags">${file.tags.map(tag => `<span class="tag">${tag}</span>`).join('')}</div>` : ''}
+                        <p>Tamaño: ${formatFileSize(file.size)}</p>
+                        <p>Tipo: ${file.type}</p>
+                        ${file.subject ? `<p>Materia: ${file.subject}</p>` : ''}
+                        ${file.tags && file.tags.length > 0 ? `<p>Etiquetas: ${file.tags.join(', ')}</p>` : ''}
+                        <p class="added-by">Subido por: ${file.uploaded_by}</p>
                     </div>
                     <div class="file-actions">
                         <button class="btn" onclick="viewFile(${file.id})">
                             <i class="fas fa-eye"></i> Ver
+                        </button>
+                        <button class="btn" onclick="downloadFile(${file.id})">
+                            <i class="fas fa-download"></i> Descargar
                         </button>
                         <button class="btn btn-danger" onclick="deleteFile(${file.id})">
                             <i class="fas fa-trash"></i> Eliminar
                         </button>
                     </div>
                 `;
-                
                 filesGrid.appendChild(fileCard);
             });
         }
 
-        function getFileIcon(type) {
-            switch(type) {
-                case 'pdf': return '<i class="fas fa-file-pdf"></i>';
-                case 'image': return '<i class="fas fa-file-image"></i>';
-                case 'document': return '<i class="fas fa-file-word"></i>';
-                default: return '<i class="fas fa-file"></i>';
+        function renderNotes() {
+            const notesGrid = document.getElementById('notesGrid');
+            notesGrid.innerHTML = '';
+
+            if (notes.length === 0) {
+                notesGrid.innerHTML = '<p>No hay notas creadas</p>';
+                return;
+            }
+
+            notes.forEach(note => {
+                const noteCard = document.createElement('div');
+                noteCard.className = 'note-card';
+                noteCard.innerHTML = `
+                    <h3>${note.title}</h3>
+                    <p>${note.content.substring(0, 200)}${note.content.length > 200 ? '...' : ''}</p>
+                    ${note.subject ? `<p><strong>Materia:</strong> ${note.subject}</p>` : ''}
+                    ${note.tags && note.tags.length > 0 ? `
+                        <div class="note-tags">
+                            ${note.tags.map(tag => `<span class="tag">${tag}</span>`).join('')}
+                        </div>
+                    ` : ''}
+                    <p class="added-by">Creado por: ${note.created_by}</p>
+                    <div class="file-actions">
+                        <button class="btn btn-danger" onclick="deleteNote(${note.id})">
+                            <i class="fas fa-trash"></i> Eliminar
+                        </button>
+                    </div>
+                `;
+                notesGrid.appendChild(noteCard);
+            });
+        }
+
+        function renderLinks() {
+            const linksList = document.getElementById('linksList');
+            linksList.innerHTML = '';
+
+            if (links.length === 0) {
+                linksList.innerHTML = '<p>No hay enlaces guardados</p>';
+                return;
+            }
+
+            links.forEach(link => {
+                const linkCard = document.createElement('div');
+                linkCard.className = 'link-card';
+                linkCard.innerHTML = `
+                    <h3>${link.title}</h3>
+                    <p><a href="${link.url}" target="_blank">${link.url}</a></p>
+                    ${link.description ? `<p>${link.description}</p>` : ''}
+                    ${link.subject ? `<p><strong>Materia:</strong> ${link.subject}</p>` : ''}
+                    ${link.tags && link.tags.length > 0 ? `<p><strong>Etiquetas:</strong> ${link.tags.join(', ')}</p>` : ''}
+                    <p class="added-by">Creado por: ${link.created_by}</p>
+                    <div class="file-actions">
+                        <button class="btn btn-danger" onclick="deleteLink(${link.id})">
+                            <i class="fas fa-trash"></i> Eliminar
+                        </button>
+                    </div>
+                `;
+                linksList.appendChild(linkCard);
+            });
+        }
+
+        function performSearch() {
+            const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+            const folderFilter = document.getElementById('folderFilter').value;
+            const typeFilter = document.getElementById('typeFilter').value;
+            const subjectFilter = document.getElementById('subjectFilter').value.toLowerCase();
+
+            // Filtrar archivos
+            const filteredFiles = files.filter(file => {
+                const matchesSearch = file.name.toLowerCase().includes(searchTerm) ||
+                                    (file.subject && file.subject.toLowerCase().includes(searchTerm)) ||
+                                    (file.tags && file.tags.some(tag => tag.toLowerCase().includes(searchTerm)));
+                
+                const matchesFolder = !folderFilter || file.folder_id == folderFilter;
+                const matchesType = !typeFilter || getFileTypeCategory(file.type) === typeFilter;
+                const matchesSubject = !subjectFilter || (file.subject && file.subject.toLowerCase().includes(subjectFilter));
+
+                return matchesSearch && matchesFolder && matchesType && matchesSubject;
+            });
+
+            // Renderizar archivos filtrados
+            const filesGrid = document.getElementById('filesGrid');
+            filesGrid.innerHTML = '';
+
+            if (filteredFiles.length === 0) {
+                filesGrid.innerHTML = '<p>No se encontraron archivos</p>';
+                return;
+            }
+
+            filteredFiles.forEach(file => {
+                const fileCard = document.createElement('div');
+                fileCard.className = 'file-card';
+                fileCard.innerHTML = `
+                    <div class="file-preview">
+                        ${getFileIcon(file.type)}
+                    </div>
+                    <div class="file-info">
+                        <h3>${file.name}</h3>
+                        <p>Tamaño: ${formatFileSize(file.size)}</p>
+                        <p>Tipo: ${file.type}</p>
+                        ${file.subject ? `<p>Materia: ${file.subject}</p>` : ''}
+                        ${file.tags && file.tags.length > 0 ? `<p>Etiquetas: ${file.tags.join(', ')}</p>` : ''}
+                        <p class="added-by">Subido por: ${file.uploaded_by}</p>
+                    </div>
+                    <div class="file-actions">
+                        <button class="btn" onclick="viewFile(${file.id})">
+                            <i class="fas fa-eye"></i> Ver
+                        </button>
+                        <button class="btn" onclick="downloadFile(${file.id})">
+                            <i class="fas fa-download"></i> Descargar
+                        </button>
+                        <button class="btn btn-danger" onclick="deleteFile(${file.id})">
+                            <i class="fas fa-trash"></i> Eliminar
+                        </button>
+                    </div>
+                `;
+                filesGrid.appendChild(fileCard);
+            });
+        }
+
+        function getFileIcon(mimeType) {
+            if (mimeType.startsWith('image/')) {
+                return '<i class="fas fa-image"></i>';
+            } else if (mimeType === 'application/pdf') {
+                return '<i class="fas fa-file-pdf"></i>';
+            } else if (mimeType.includes('document') || mimeType.includes('word')) {
+                return '<i class="fas fa-file-word"></i>';
+            } else if (mimeType.includes('spreadsheet') || mimeType.includes('excel')) {
+                return '<i class="fas fa-file-excel"></i>';
+            } else if (mimeType.includes('presentation') || mimeType.includes('powerpoint')) {
+                return '<i class="fas fa-file-powerpoint"></i>';
+            } else {
+                return '<i class="fas fa-file"></i>';
+            }
+        }
+
+        function getFileTypeCategory(mimeType) {
+            if (mimeType.startsWith('image/')) {
+                return 'image';
+            } else if (mimeType === 'application/pdf') {
+                return 'pdf';
+            } else if (mimeType.includes('document') || mimeType.includes('word') || 
+                       mimeType.includes('spreadsheet') || mimeType.includes('excel') || 
+                       mimeType.includes('presentation') || mimeType.includes('powerpoint')) {
+                return 'document';
+            } else {
+                return 'other';
             }
         }
 
@@ -1158,334 +1632,378 @@
             return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
         }
 
-        function viewFile(fileId) {
+        function fileToBase64(file) {
+            return new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.readAsDataURL(file);
+                reader.onload = () => resolve(reader.result);
+                reader.onerror = error => reject(error);
+            });
+        }
+
+        function base64ToBlob(base64, mimeType) {
+            const byteCharacters = atob(base64.split(',')[1]);
+            const byteNumbers = new Array(byteCharacters.length);
+            for (let i = 0; i < byteCharacters.length; i++) {
+                byteNumbers[i] = byteCharacters.charCodeAt(i);
+            }
+            const byteArray = new Uint8Array(byteNumbers);
+            return new Blob([byteArray], { type: mimeType });
+        }
+
+        async function viewFile(fileId) {
             const file = files.find(f => f.id === fileId);
             if (!file) return;
 
             const modal = document.getElementById('fileViewerModal');
-            const viewer = document.getElementById('fileViewer');
             const title = document.getElementById('viewerTitle');
-            const pdfControls = document.getElementById('pdfControls');
+            const viewer = document.getElementById('fileViewer');
+            const controls = document.getElementById('pdfControls');
 
             title.textContent = file.name;
             viewer.innerHTML = '';
+            controls.classList.add('hidden');
 
-            if (file.type === 'pdf') {
-                pdfControls.classList.remove('hidden');
-                loadPdf(file.data);
-            } else if (file.type === 'image') {
-                pdfControls.classList.add('hidden');
-                viewer.innerHTML = `<img src="${file.data}" style="max-width: 100%; max-height: 100%;" alt="${file.name}">`;
-            } else {
-                pdfControls.classList.add('hidden');
-                viewer.innerHTML = `<p>Vista previa no disponible para este tipo de archivo.</p>`;
+            try {
+                const fileData = base64ToBlob(file.file_data, file.type);
+                const fileUrl = URL.createObjectURL(fileData);
+
+                if (file.type === 'application/pdf') {
+                    // Mostrar PDF
+                    controls.classList.remove('hidden');
+                    await displayPDF(fileUrl);
+                } else if (file.type.startsWith('image/')) {
+                    // Mostrar imagen
+                    const img = document.createElement('img');
+                    img.src = fileUrl;
+                    img.style.maxWidth = '100%';
+                    img.style.maxHeight = '100%';
+                    viewer.appendChild(img);
+                } else if (file.type.startsWith('text/')) {
+                    // Mostrar texto
+                    const text = await fetch(fileUrl).then(r => r.text());
+                    const pre = document.createElement('pre');
+                    pre.textContent = text;
+                    pre.style.whiteSpace = 'pre-wrap';
+                    pre.style.maxHeight = '500px';
+                    pre.style.overflow = 'auto';
+                    viewer.appendChild(pre);
+                } else {
+                    viewer.innerHTML = `
+                        <div style="text-align: center; padding: 40px;">
+                            <i class="fas fa-file" style="font-size: 4em; color: #cbd5e0; margin-bottom: 20px;"></i>
+                            <p>Vista previa no disponible para este tipo de archivo</p>
+                            <button class="btn" onclick="downloadFile(${fileId})">
+                                <i class="fas fa-download"></i> Descargar
+                            </button>
+                        </div>
+                    `;
+                }
+
+                modal.style.display = 'block';
+            } catch (error) {
+                console.error('Error mostrando archivo:', error);
+                showMessage('Error mostrando archivo: ' + error.message, 'error');
             }
-
-            modal.style.display = 'block';
         }
 
-        function loadPdf(dataUrl) {
-            const viewer = document.getElementById('fileViewer');
-            viewer.innerHTML = '<canvas id="pdfCanvas" style="max-width: 100%;"></canvas>';
-            
-            pdfjsLib.getDocument(dataUrl).promise.then(pdf => {
+        async function displayPDF(pdfUrl) {
+            try {
+                const pdf = await pdfjsLib.getDocument(pdfUrl).promise;
                 currentPdf = pdf;
                 currentPage = 1;
-                pdfScale = 1.0;
                 document.getElementById('totalPages').textContent = pdf.numPages;
-                renderPdfPage();
-            }).catch(err => {
-                viewer.innerHTML = '<p>Error al cargar el PDF</p>';
-            });
+                await renderPDFPage(currentPage);
+            } catch (error) {
+                console.error('Error cargando PDF:', error);
+                document.getElementById('fileViewer').innerHTML = '<p>Error cargando PDF</p>';
+            }
         }
 
-        function renderPdfPage() {
+        async function renderPDFPage(pageNumber) {
             if (!currentPdf) return;
-            
-            const canvas = document.getElementById('pdfCanvas');
-            const ctx = canvas.getContext('2d');
-            
-            currentPdf.getPage(currentPage).then(page => {
+
+            try {
+                const page = await currentPdf.getPage(pageNumber);
+                const canvas = document.createElement('canvas');
+                const context = canvas.getContext('2d');
+
                 const viewport = page.getViewport({ scale: pdfScale });
                 canvas.height = viewport.height;
                 canvas.width = viewport.width;
-                
-                const renderContext = {
-                    canvasContext: ctx,
-                    viewport: viewport
-                };
-                
-                page.render(renderContext);
-                document.getElementById('currentPage').textContent = currentPage;
-            });
+
+                await page.render({ canvasContext: context, viewport: viewport }).promise;
+
+                const viewer = document.getElementById('fileViewer');
+                viewer.innerHTML = '';
+                viewer.appendChild(canvas);
+
+                document.getElementById('currentPage').textContent = pageNumber;
+            } catch (error) {
+                console.error('Error renderizando página PDF:', error);
+            }
         }
 
         function prevPage() {
             if (currentPage > 1) {
                 currentPage--;
-                renderPdfPage();
+                renderPDFPage(currentPage);
             }
         }
 
         function nextPage() {
-            if (currentPage < currentPdf.numPages) {
+            if (currentPdf && currentPage < currentPdf.numPages) {
                 currentPage++;
-                renderPdfPage();
+                renderPDFPage(currentPage);
             }
         }
 
         function zoomIn() {
-            pdfScale += 0.2;
-            renderPdfPage();
+            pdfScale += 0.25;
+            renderPDFPage(currentPage);
         }
 
         function zoomOut() {
-            if (pdfScale > 0.4) {
-                pdfScale -= 0.2;
-                renderPdfPage();
+            if (pdfScale > 0.5) {
+                pdfScale -= 0.25;
+                renderPDFPage(currentPage);
             }
         }
 
-        function deleteFile(fileId) {
-            if (confirm('¿Estás seguro de que quieres eliminar este archivo?')) {
-                files = files.filter(f => f.id !== fileId);
-                saveFiles();
-                renderFiles();
-                showMessage('Archivo eliminado exitosamente');
+        function downloadFile(fileId) {
+            const file = files.find(f => f.id === fileId);
+            if (!file) return;
+
+            try {
+                const fileData = base64ToBlob(file.file_data, file.type);
+                const url = URL.createObjectURL(fileData);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = file.name;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+            } catch (error) {
+                console.error('Error descargando archivo:', error);
+                showMessage('Error descargando archivo: ' + error.message, 'error');
             }
         }
 
-        // Funciones de notas
-        function createNote() {
-            const title = document.getElementById('noteTitle').value.trim();
-            const content = document.getElementById('noteContent').value.trim();
-            const tags = document.getElementById('noteTags').value.trim();
-            const subject = document.getElementById('noteSubject').value.trim();
-            const date = document.getElementById('noteDate').value;
+        async function deleteFile(fileId) {
+            if (!confirm('¿Estás seguro de que quieres eliminar este archivo?')) return;
 
-            if (!title || !content) {
-                showMessage('Por favor completa título y contenido', 'error');
+            if (!supabaseClient) {
+                showMessage('Error: No hay conexión con la base de datos', 'error');
                 return;
             }
 
-            const note = {
-                id: Date.now(),
-                title: title,
-                content: content,
-                tags: tags.split(',').map(tag => tag.trim()).filter(tag => tag),
-                subject: subject,
-                date: date,
-                createdBy: currentUser,
-                createdAt: new Date().toISOString()
-            };
+            try {
+                const { error } = await supabaseClient
+                    .from('files')
+                    .delete()
+                    .eq('id', fileId);
 
-            notes.push(note);
-            saveNotes();
-            renderNotes();
-            closeModal('noteModal');
-            showMessage('Nota creada exitosamente');
-            
-            // Limpiar formulario
-            document.getElementById('noteTitle').value = '';
-            document.getElementById('noteContent').value = '';
-            document.getElementById('noteTags').value = '';
-            document.getElementById('noteSubject').value = '';
-            document.getElementById('noteDate').value = '';
-        }
+                if (error) throw error;
 
-        function renderNotes() {
-            const notesGrid = document.getElementById('notesGrid');
-            notesGrid.innerHTML = '';
-
-            notes.forEach(note => {
-                const noteCard = document.createElement('div');
-                noteCard.className = 'note-card';
-                noteCard.innerHTML = `
-                    <h3>${note.title}</h3>
-                    <p>${note.content}</p>
-                    <p><i class="fas fa-book"></i> ${note.subject || 'Sin materia'}</p>
-                    <p><i class="fas fa-calendar"></i> ${note.date || 'Sin fecha'}</p>
-                    <p class="added-by">por ${note.createdBy}</p>
-                    ${note.tags.length > 0 ? `<div class="note-tags">${note.tags.map(tag => `<span class="tag">${tag}</span>`).join('')}</div>` : ''}
-                    <div class="file-actions" style="margin-top: 15px;">
-                        <button class="btn btn-danger" onclick="deleteNote(${note.id})">
-                            <i class="fas fa-trash"></i> Eliminar
-                        </button>
-                    </div>
-                `;
-                notesGrid.appendChild(noteCard);
-            });
-        }
-
-        function deleteNote(noteId) {
-            if (confirm('¿Estás seguro de que quieres eliminar esta nota?')) {
-                notes = notes.filter(n => n.id !== noteId);
-                saveNotes();
-                renderNotes();
-                showMessage('Nota eliminada exitosamente');
+                showMessage('Archivo eliminado exitosamente', 'success');
+                loadFiles();
+            } catch (error) {
+                console.error('Error eliminando archivo:', error);
+                showMessage('Error eliminando archivo: ' + error.message, 'error');
             }
         }
 
-        // Funciones de enlaces
-        function createLink() {
-            const title = document.getElementById('linkTitle').value.trim();
-            const url = document.getElementById('linkUrl').value.trim();
-            const description = document.getElementById('linkDescription').value.trim();
-            const subject = document.getElementById('linkSubject').value.trim();
-            const tags = document.getElementById('linkTags').value.trim();
+        async function deleteNote(noteId) {
+            if (!confirm('¿Estás seguro de que quieres eliminar esta nota?')) return;
 
-            if (!title || !url) {
-                showMessage('Por favor completa título y URL', 'error');
+            if (!supabaseClient) {
+                showMessage('Error: No hay conexión con la base de datos', 'error');
                 return;
             }
 
-            const link = {
-                id: Date.now(),
-                title: title,
-                url: url,
-                description: description,
-                subject: subject,
-                tags: tags.split(',').map(tag => tag.trim()).filter(tag => tag),
-                createdBy: currentUser,
-                createdAt: new Date().toISOString()
-            };
+            try {
+                const { error } = await supabaseClient
+                    .from('notes')
+                    .delete()
+                    .eq('id', noteId);
 
-            links.push(link);
-            saveLinks();
-            renderLinks();
-            closeModal('linkModal');
-            showMessage('Enlace guardado exitosamente');
-            
-            // Limpiar formulario
-            document.getElementById('linkTitle').value = '';
-            document.getElementById('linkUrl').value = '';
-            document.getElementById('linkDescription').value = '';
-            document.getElementById('linkSubject').value = '';
-            document.getElementById('linkTags').value = '';
-        }
+                if (error) throw error;
 
-        function renderLinks() {
-            const linksList = document.getElementById('linksList');
-            linksList.innerHTML = '';
-
-            links.forEach(link => {
-                const linkCard = document.createElement('div');
-                linkCard.className = 'link-card';
-                linkCard.innerHTML = `
-                    <h3>${link.title}</h3>
-                    <p><a href="${link.url}" target="_blank">${link.url}</a></p>
-                    <p>${link.description}</p>
-                    <p><i class="fas fa-book"></i> ${link.subject || 'Sin materia'}</p>
-                    <p class="added-by">por ${link.createdBy}</p>
-                    ${link.tags.length > 0 ? `<div class="note-tags">${link.tags.map(tag => `<span class="tag">${tag}</span>`).join('')}</div>` : ''}
-                    <div class="file-actions" style="margin-top: 15px;">
-                        <button class="btn btn-danger" onclick="deleteLink(${link.id})">
-                            <i class="fas fa-trash"></i> Eliminar
-                        </button>
-                    </div>
-                `;
-                linksList.appendChild(linkCard);
-            });
-        }
-
-        function deleteLink(linkId) {
-            if (confirm('¿Estás seguro de que quieres eliminar este enlace?')) {
-                links = links.filter(l => l.id !== linkId);
-                saveLinks();
-                renderLinks();
-                showMessage('Enlace eliminado exitosamente');
+                showMessage('Nota eliminada exitosamente', 'success');
+                loadNotes();
+            } catch (error) {
+                console.error('Error eliminando nota:', error);
+                showMessage('Error eliminando nota: ' + error.message, 'error');
             }
         }
 
-        // Funciones de búsqueda
-        function performSearch() {
-            const searchTerm = document.getElementById('searchInput').value.toLowerCase();
-            const folderFilter = document.getElementById('folderFilter').value;
-            const typeFilter = document.getElementById('typeFilter').value;
-            const subjectFilter = document.getElementById('subjectFilter').value.toLowerCase();
+        async function deleteLink(linkId) {
+            if (!confirm('¿Estás seguro de que quieres eliminar este enlace?')) return;
 
-            renderFiles();
+            if (!supabaseClient) {
+                showMessage('Error: No hay conexión con la base de datos', 'error');
+                return;
+            }
+
+            try {
+                const { error } = await supabaseClient
+                    .from('links')
+                    .delete()
+                    .eq('id', linkId);
+
+                if (error) throw error;
+
+                showMessage('Enlace eliminado exitosamente', 'success');
+                loadLinks();
+            } catch (error) {
+                console.error('Error eliminando enlace:', error);
+                showMessage('Error eliminando enlace: ' + error.message, 'error');
+            }
         }
 
-        function getFilteredFiles() {
-            const searchTerm = document.getElementById('searchInput').value.toLowerCase();
-            const folderFilter = document.getElementById('folderFilter').value;
-            const typeFilter = document.getElementById('typeFilter').value;
-            const subjectFilter = document.getElementById('subjectFilter').value.toLowerCase();
-
-            return files.filter(file => {
-                const matchesSearch = !searchTerm || 
-                    file.name.toLowerCase().includes(searchTerm) ||
-                    file.tags.some(tag => tag.toLowerCase().includes(searchTerm));
-                
-                const matchesFolder = !folderFilter || file.folderId == folderFilter;
-                const matchesType = !typeFilter || file.type === typeFilter;
-                const matchesSubject = !subjectFilter || 
-                    (file.subject && file.subject.toLowerCase().includes(subjectFilter));
-
-                return matchesSearch && matchesFolder && matchesType && matchesSubject;
-            });
-        }
-
-        // Funciones de calendario
-        function loadCalendarData(date) {
+        function loadCalendarEvents(dateStr) {
             const calendarContent = document.getElementById('calendarContent');
-            calendarContent.innerHTML = '';
-
-            if (!date) {
-                calendarContent.innerHTML = '<p>Selecciona una fecha para ver eventos</p>';
-                return;
-            }
-
-            // Buscar archivos, notas y enlaces con la fecha seleccionada
-            const dateFiles = files.filter(f => f.date === date);
-            const dateNotes = notes.filter(n => n.date === date);
             
-            if (dateFiles.length === 0 && dateNotes.length === 0) {
+            // Filtrar eventos por fecha
+            const dateEvents = [
+                ...files.filter(f => f.date === dateStr),
+                ...notes.filter(n => n.date === dateStr)
+            ];
+
+            if (dateEvents.length === 0) {
                 calendarContent.innerHTML = '<p>No hay eventos para esta fecha</p>';
                 return;
             }
 
-            let content = '<h3>Eventos para ' + date + '</h3>';
+            calendarContent.innerHTML = '<h3>Eventos del ' + dateStr + '</h3>';
             
-            if (dateFiles.length > 0) {
-                content += '<h4>Archivos:</h4>';
-                dateFiles.forEach(file => {
-                    content += `<div class="calendar-item">
-                        <i class="fas fa-file"></i> ${file.name} - ${file.subject || 'Sin materia'}
-                        <span class="added-by">por ${file.uploadedBy}</span>
-                    </div>`;
-                });
+            dateEvents.forEach(event => {
+                const eventDiv = document.createElement('div');
+                eventDiv.className = 'event-item';
+                eventDiv.style.cssText = `
+                    background: white;
+                    padding: 15px;
+                    margin: 10px 0;
+                    border-radius: 8px;
+                    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+                    border-left: 4px solid #667eea;
+                `;
+                
+                if (event.name) {
+                    // Es un archivo
+                    eventDiv.innerHTML = `
+                        <h4><i class="fas fa-file"></i> ${event.name}</h4>
+                        <p>Archivo subido por: ${event.uploaded_by}</p>
+                        ${event.subject ? `<p>Materia: ${event.subject}</p>` : ''}
+                    `;
+                } else {
+                    // Es una nota
+                    eventDiv.innerHTML = `
+                        <h4><i class="fas fa-sticky-note"></i> ${event.title}</h4>
+                        <p>${event.content.substring(0, 100)}...</p>
+                        <p>Creado por: ${event.created_by}</p>
+                        ${event.subject ? `<p>Materia: ${event.subject}</p>` : ''}
+                    `;
+                }
+                
+                calendarContent.appendChild(eventDiv);
+            });
+        }
+
+        // Funciones auxiliares
+        function fileToBase64(file) {
+            return new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.readAsDataURL(file);
+                reader.onload = () => resolve(reader.result);
+                reader.onerror = error => reject(error);
+            });
+        }
+
+        function base64ToBlob(base64, mimeType) {
+            const byteCharacters = atob(base64.split(',')[1]);
+            const byteNumbers = new Array(byteCharacters.length);
+            
+            for (let i = 0; i < byteCharacters.length; i++) {
+                byteNumbers[i] = byteCharacters.charCodeAt(i);
             }
-
-            if (dateNotes.length > 0) {
-                content += '<h4>Notas:</h4>';
-                dateNotes.forEach(note => {
-                    content += `<div class="calendar-item">
-                        <i class="fas fa-sticky-note"></i> ${note.title} - ${note.subject || 'Sin materia'}
-                        <span class="added-by">por ${note.createdBy}</span>
-                    </div>`;
-                });
-            }
-
-            calendarContent.innerHTML = content;
+            
+            const byteArray = new Uint8Array(byteNumbers);
+            return new Blob([byteArray], { type: mimeType });
         }
 
-        // Funciones de modales
-        function openModal(modalId) {
-            document.getElementById(modalId).style.display = 'block';
-        }
-
-        function closeModal(modalId) {
-            document.getElementById(modalId).style.display = 'none';
-        }
-
-        // Cerrar modal al hacer clic fuera
-        window.onclick = function(event) {
-            if (event.target.classList.contains('modal')) {
-                event.target.style.display = 'none';
+        function getFileIcon(mimeType) {
+            if (mimeType.startsWith('image/')) {
+                return '<i class="fas fa-image"></i>';
+            } else if (mimeType === 'application/pdf') {
+                return '<i class="fas fa-file-pdf"></i>';
+            } else if (mimeType.includes('word') || mimeType.includes('document')) {
+                return '<i class="fas fa-file-word"></i>';
+            } else if (mimeType.includes('excel') || mimeType.includes('spreadsheet')) {
+                return '<i class="fas fa-file-excel"></i>';
+            } else if (mimeType.includes('powerpoint') || mimeType.includes('presentation')) {
+                return '<i class="fas fa-file-powerpoint"></i>';
+            } else if (mimeType.startsWith('text/')) {
+                return '<i class="fas fa-file-alt"></i>';
+            } else if (mimeType.startsWith('video/')) {
+                return '<i class="fas fa-file-video"></i>';
+            } else if (mimeType.startsWith('audio/')) {
+                return '<i class="fas fa-file-audio"></i>';
+            } else {
+                return '<i class="fas fa-file"></i>';
             }
         }
+
+        function getFileTypeCategory(mimeType) {
+            if (mimeType === 'application/pdf') {
+                return 'pdf';
+            } else if (mimeType.startsWith('image/')) {
+                return 'image';
+            } else if (mimeType.includes('word') || mimeType.includes('document') || 
+                       mimeType.includes('excel') || mimeType.includes('spreadsheet') || 
+                       mimeType.includes('powerpoint') || mimeType.includes('presentation')) {
+                return 'document';
+            } else {
+                return 'other';
+            }
+        }
+
+        function formatFileSize(bytes) {
+            if (bytes === 0) return '0 Bytes';
+            const k = 1024;
+            const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+            const i = Math.floor(Math.log(bytes) / Math.log(k));
+            return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+        }
+
+        function showMessage(message, type) {
+            const messagesDiv = document.getElementById('messages');
+            const messageDiv = document.createElement('div');
+            messageDiv.className = type === 'error' ? 'error-message' : 'success-message';
+            messageDiv.textContent = message;
+            
+            messagesDiv.appendChild(messageDiv);
+            
+            // Remover mensaje después de 5 segundos
+            setTimeout(() => {
+                if (messageDiv.parentNode) {
+                    messageDiv.parentNode.removeChild(messageDiv);
+                }
+            }, 5000);
+        }
+
+        // Función para manejar errores de conexión
+        window.addEventListener('online', () => {
+            if (supabaseClient) {
+                updateConnectionStatus('connected');
+                loadAllData();
+            }
+        });
+
+        window.addEventListener('offline', () => {
+            updateConnectionStatus('disconnected');
+        });
     </script>
 </body>
 </html>
