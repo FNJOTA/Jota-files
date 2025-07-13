@@ -646,6 +646,82 @@ body.dark .form-group input[type="color"] {
     color: #f9fafb;
     border-color: #4b5563;
 }
+@media (max-width: 768px) {
+    .container {
+        padding: 10px;
+    }
+
+    .tabs {
+        flex-wrap: wrap;
+        justify-content: center;
+    }
+
+    .tab {
+        flex: 1 1 45%;
+        margin-bottom: 10px;
+        text-align: center;
+        padding: 10px;
+        font-size: 14px;
+    }
+
+    .user-form {
+        flex-direction: column;
+        gap: 8px;
+    }
+
+    .search-filters {
+        flex-direction: column;
+        gap: 12px;
+        align-items: stretch;
+    }
+
+    .upload-area {
+        padding: 20px;
+    }
+
+    .files-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .file-card,
+    .note-card,
+    .link-card {
+        padding: 15px;
+    }
+
+    .modal-content {
+        max-width: 95%;
+        padding: 20px;
+    }
+
+    .form-group input,
+    .form-group textarea,
+    .form-group select {
+        font-size: 15px;
+    }
+
+    #docContent {
+        min-height: 150px;
+    }
+
+    .file-actions {
+        flex-direction: column;
+    }
+
+    .file-actions .btn {
+        width: 100%;
+    }
+
+    .file-preview {
+        font-size: 2.5em;
+        height: 100px;
+    }
+}
+.modal-content {
+    max-height: 90vh;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+}
 
 
     </style>
