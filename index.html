@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="icon" type="image/png" href="logo/logo.png">
-    <title>Temp Files V.2</title>
+    <title>Temp Files</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github-dark.min.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
@@ -745,7 +745,7 @@ body.dark .form-group input[type="color"] {
         <div class="header">
             
             <h1><img src="https://i.ibb.co/x8s51dBF/IMG-20250709-235917.png" alt="Sticker" style="height: 80px; vertical-align: middle; border-radius: 15px;">
-</i> Temp Files V.2</h1>
+</i> Temp Files</h1>
 
 
             <div class="connection-status connecting" id="connectionStatus">
@@ -1473,7 +1473,7 @@ body.dark .form-group input[type="color"] {
                 const { data, error } = await supabaseClient
                     .from('files')
                     .insert([{
-                        nname: getUniqueFileName(file.name),
+                        name: getUniqueFileName(file.name),
                         size: file.size,
                         type: file.type,
                         folder_id: currentFolder,
