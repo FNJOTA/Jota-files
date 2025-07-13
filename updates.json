@@ -1,8 +1,13 @@
 [
   {
+    "titulo": "Versión 1.1",
+    "descripcion": "Se le corrigio un error con la creacion de archivo doc, ahora ademas de arreglarlo a su uso como docx se le agrego mas creaciones como pdf y python.",
+    "fecha": "2025-07-13"
+  },
+  {
     "titulo": "Versión 1.0",
     "descripcion": "Se elimino la sección de carpetas por multiples errores en ella(Dudosa vuelta a la pagina). Se agrego la seccion de CREAR DOCUMENTOS para facilitar la subida de archivo.",
-    "fecha": "2025-07-13"
+    "fecha": "2025-07-12"
   }
 
 ]
