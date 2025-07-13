@@ -1,5 +1,10 @@
 [
   {
+    "titulo": "Versión 1.2",
+    "descripcion": "Se le agrego un visor bonito para .py, .js, .html, etc, subida de carpetas completas, enlaces temporales para compartir archivos, sistema que evita sobrescribir archivos con nombres repetidos, modo claro/oscuro con guardado automático(local)",
+    "fecha": "2025-07-13"
+  },
+    {
     "titulo": "Versión 1.1",
     "descripcion": "Se le corrigio un error con la creacion de archivo doc, ahora ademas de arreglarlo a su uso como docx se le agrego mas creaciones como pdf y python.",
     "fecha": "2025-07-13"
