@@ -5,6 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="icon" type="image/png" href="logo/logo.png">
     <title>Temp Files V.2</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github-dark.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/flatpickr/4.6.13/flatpickr.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
@@ -547,9 +549,117 @@
             color: #a0aec0;
             font-style: italic;
         }
+        /* 🌙 MODO OSCURO VISUALMENTE CLARO */
+body.dark {
+    background: #121212;
+    color: #f1f1f1;
+}
+
+body.dark .header,
+body.dark .content,
+body.dark .modal-content,
+body.dark .file-card,
+body.dark .note-card,
+body.dark .link-card,
+body.dark .update-card {
+    background: #1e1e1e;
+    color: #ffffff;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.6);
+}
+
+body.dark .header h1,
+body.dark h2,
+body.dark h3,
+body.dark .form-group label,
+body.dark .update-card h3 {
+    color: #ffffff;
+}
+
+body.dark input,
+body.dark select,
+body.dark textarea {
+    background: #2a2a2a;
+    color: #f7f7f7;
+    border-color: #3c3c3c;
+}
+
+body.dark .btn {
+    background: linear-gradient(135deg, #4f46e5, #7c3aed);
+    color: white;
+    border: none;
+}
+
+body.dark .btn:hover {
+    background: linear-gradient(135deg, #6d28d9, #7c3aed);
+    box-shadow: 0 0 10px rgba(124, 58, 237, 0.5);
+}
+
+body.dark .tab.active {
+    background: #292929;
+    color: #ffffff;
+    box-shadow: 0 0 10px rgba(255, 255, 255, 0.05);
+}
+
+body.dark .tag {
+    background: rgba(255, 255, 255, 0.1);
+    color: #facc15;
+}
+
+body.dark .added-by,
+body.dark .update-date {
+    color: #cbd5e1;
+    font-style: italic;
+}
+
+body.dark .file-preview {
+    background: #2d2d2d;
+    color: #a3a3a3;
+}
+
+body.dark .file-actions .btn {
+    background: #3b3b3b;
+    color: #f0f0f0;
+    border: 1px solid #4a4a4a;
+}
+
+body.dark .file-actions .btn:hover {
+    background: #4a4a4a;
+}
+
+body.dark .realtime-indicator {
+    background: #22c55e;
+    color: white;
+}
+
+body.dark .realtime-indicator.syncing {
+    background: #eab308;
+}
+
+body.dark .realtime-indicator.error {
+    background: #ef4444;
+}
+
+body.dark .calendar-container,
+body.dark .calendar-container input,
+body.dark .form-group input[type="color"] {
+    background: #1f2937;
+    color: #f9fafb;
+    border-color: #4b5563;
+}
+
+
     </style>
 </head>
+    <div style="text-align: left; margin: 10px;">
+    <button class="btn" onclick="toggleTheme()">
+        <i class="fas fa-adjust"></i> Cambiar tema
+    </button>
 <body>
+
+</div>
+
+    <body onload="applyTheme()">
+
     <div class="realtime-indicator" id="realtimeIndicator">
         <i class="fas fa-circle"></i> Conectando...
     </div>
@@ -625,6 +735,8 @@
                     <i class="fas fa-cloud-upload-alt" style="font-size: 3em; color: #cbd5e0; margin-bottom: 20px;"></i>
                     <p>Arrastra archivos aquí o haz clic para seleccionar</p>
                     <input type="file" id="fileInput" multiple style="display: none;">
+                    <input type="file" id="modalFileInput" multiple webkitdirectory directory>
+
                 </div>
 
                 <div id="filesGrid" class="files-grid"></div>
@@ -1285,7 +1397,7 @@
                 const { data, error } = await supabaseClient
                     .from('files')
                     .insert([{
-                        name: file.name,
+                        nname: getUniqueFileName(file.name),
                         size: file.size,
                         type: file.type,
                         folder_id: currentFolder,
@@ -1503,6 +1615,10 @@ ${file.uploaded_at ? `<p class="added-by">Creado el: ${formatDate(file.uploaded_
                         <button class="btn btn-danger" onclick="deleteFile(${file.id})">
                             <i class="fas fa-trash"></i> Eliminar
                         </button>
+                        <button class="btn" onclick="shareFile(${file.id})">
+                        <i class="fas fa-share-alt"></i> Compartir
+                        </button>
+
                     </div>
                 `;
                 filesGrid.appendChild(fileCard);
@@ -1720,11 +1836,14 @@ ${file.uploaded_at ? `<p class="added-by">Creado el: ${formatDate(file.uploaded_
                     // Mostrar texto
                     const text = await fetch(fileUrl).then(r => r.text());
                     const pre = document.createElement('pre');
-                    pre.textContent = text;
-                    pre.style.whiteSpace = 'pre-wrap';
+                    const code = document.createElement('code');
+                    code.textContent = text;
+                    code.className = file.name.split('.').pop(); 
+                    pre.appendChild(code);
                     pre.style.maxHeight = '500px';
                     pre.style.overflow = 'auto';
                     viewer.appendChild(pre);
+                    hljs.highlightElement(code);
                 } else {
                     viewer.innerHTML = `
                         <div style="text-align: center; padding: 40px;">
@@ -2144,6 +2263,44 @@ async function cargarActualizaciones() {
         year: 'numeric'
     });
 }
+
+function shareFile(fileId) {
+    const file = files.find(f => f.id === fileId);
+    if (!file) return;
+    
+    const blob = base64ToBlob(file.file_data, file.type);
+    const url = URL.createObjectURL(blob);
+    
+    navigator.clipboard.writeText(url).then(() => {
+        showMessage('Enlace copiado al portapapeles', 'success');
+    }).catch(() => {
+        showMessage('Error al copiar el enlace', 'error');
+    });
+}
+function getUniqueFileName(originalName) {
+    const base = originalName.replace(/\.[^/.]+$/, ""); // sin extensión
+    const ext = originalName.split('.').pop();
+    let name = originalName;
+    let count = 1;
+
+    while (files.find(f => f.name === name)) {
+        name = `${base} (${count++}).${ext}`;
+    }
+
+    return name;
+}
+function toggleTheme() {
+    const isDark = document.body.classList.toggle('dark');
+    localStorage.setItem('theme', isDark ? 'dark' : 'light');
+}
+
+function applyTheme() {
+    const saved = localStorage.getItem('theme');
+    if (saved === 'dark' || (!saved && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+        document.body.classList.add('dark');
+    }
+}
+
 
 </script>
 
