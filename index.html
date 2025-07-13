@@ -7,6 +7,7 @@
     <title>Temp Files V.2</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/flatpickr/4.6.13/flatpickr.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/flatpickr/4.6.13/flatpickr.min.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
@@ -510,6 +511,42 @@
                 justify-content: center;
             }
         }
+        .updates-list {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .update-card {
+            background: white;
+            border-radius: 12px;
+            padding: 20px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+            transition: all 0.3s ease;
+            border-left: 5px solid #a0aec0; /* Un color neutro para las actualizaciones */
+        }
+
+        .update-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+        }
+
+        .update-card h3 {
+            color: #2d3748;
+            margin-bottom: 5px;
+        }
+
+        .update-card p {
+            color: #718096;
+            font-size: 0.9em;
+            margin-bottom: 5px;
+        }
+
+        .update-card .update-date {
+            font-size: 0.8em;
+            color: #a0aec0;
+            font-style: italic;
+        }
     </style>
 </head>
 <body>
@@ -547,6 +584,13 @@
             <button class="tab" onclick="showTab('calendar')">
                 <i class="fas fa-calendar"></i> Calendario
             </button>
+            <button class="tab" onclick="showTab('generator')">
+            <i class="fas fa-file-alt"></i> Crear Documento
+</button>
+<button class="tab" onclick="showTab('updates')">
+                <i class="fas fa-history"></i> Actualizaciones
+            </button>
+
             
         </div>
 
@@ -555,9 +599,7 @@
             
             <div class="search-filters">
                 <input type="text" id="searchInput" placeholder="Buscar..." onkeyup="performSearch()">
-                <select id="folderFilter" onchange="performSearch()">
-                    <option value="">Todas las carpetas</option>
-                </select>
+
                 <select id="typeFilter" onchange="performSearch()">
                     <option value="">Todos los tipos</option>
                     <option value="pdf">PDF</option>
@@ -573,9 +615,7 @@
                 <div class="folder-tree" id="folderTree"></div>
                 
                 <div style="display: flex; gap: 10px; margin-bottom: 20px; flex-wrap: wrap;">
-                    <button class="btn" onclick="openModal('folderModal')">
-                        <i class="fas fa-folder-plus"></i> Nueva Carpeta
-                    </button>
+
                     <button class="btn btn-secondary" onclick="openModal('uploadModal')">
                         <i class="fas fa-upload"></i> Subir Archivo
                     </button>
@@ -590,7 +630,28 @@
                 <div id="filesGrid" class="files-grid"></div>
             </div>
 
-         
+            <div id="generatorTab" class="tab-content hidden">
+    <div class="form-group">
+        <label>Título del documento:</label>
+        <input type="text" id="docTitle" placeholder="Ej: Apuntes de biología">
+    </div>
+    <div class="form-group">
+        <label>Contenido:</label>
+        <textarea id="docContent" placeholder="Escribe tu contenido aquí..."></textarea>
+    </div>
+    <div class="form-group">
+        <label>Formato:</label>
+        <select id="docFormat">
+            <option value="txt">.txt</option>
+            <!--<option value="pdf">.pdf(no funciona aun)</option>-->
+            <option value="doc">.doc</option>
+        </select>
+    </div>
+    <button class="btn" onclick="generateDocument()">
+        <i class="fas fa-file-download"></i> Generar Documento
+    </button>
+</div>
+
     
             <div id="notesTab" class="tab-content hidden">
                 <button class="btn" onclick="openModal('noteModal')" style="margin-bottom: 20px;">
@@ -608,11 +669,21 @@
             </div>
 
            
-            <div id="calendarTab" class="tab-content hidden">
-                <div class="calendar-container">
-                    <input type="text" id="calendarPicker" placeholder="Selecciona una fecha">
-                    <div id="calendarContent" style="margin-top: 20px;"></div>
-                </div>
+
+<div id="calendarTab" class="tab-content hidden">
+    <div class="calendar-container">
+        <input type="text" id="calendarPicker" placeholder="Selecciona una fecha">
+        <div id="calendarContent" style="margin-top: 20px;"></div>
+    </div>
+</div>
+
+
+<div id="updatesTab" class="tab-content hidden">
+    <h2>Historial de Actualizaciones</h2>
+    <div id="updatesList" class="updates-list"></div>
+</div>
+
+            </div>
             </div>
         </div>
     </div>
@@ -654,12 +725,7 @@
                 <label>Archivo:</label>
                 <input type="file" id="modalFileInput" multiple>
             </div>
-            <div class="form-group">
-                <label>Carpeta:</label>
-                <select id="uploadFolder">
-                    <option value="">Sin carpeta</option>
-                </select>
-            </div>
+
             <div class="form-group">
                 <label>Materia:</label>
                 <input type="text" id="uploadSubject" placeholder="Ej: Matemáticas">
@@ -827,6 +893,8 @@
             }
         }
 
+
+        
         async function createTables() {
             const createFoldersTable = `
                 CREATE TABLE IF NOT EXISTS folders (
@@ -884,6 +952,7 @@
             // directamente en tu base de datos de Supabase
             console.log('Tablas SQL para crear:', { createFoldersTable, createFilesTable, createNotesTable, createLinksTable });
         }
+        
 
         function updateConnectionStatus(status) {
             const statusElement = document.getElementById('connectionStatus');
@@ -917,6 +986,8 @@
                     isConnected = false;
             }
         }
+
+        
 
         function setupEventListeners() {
             // Drag and drop
@@ -977,6 +1048,7 @@
                 showMessage('Nombre establecido: ' + name, 'success');
             }
         }
+        
 
         async function loadAllData() {
             try {
@@ -985,7 +1057,7 @@
                     loadFolders(),
                     loadFiles(),
                     loadNotes(),
-                    loadLinks()
+                    loadLinks(),
                 ]);
                 updateConnectionStatus('connected');
             } catch (error) {
@@ -1109,20 +1181,26 @@
         }
 
         function showTab(tabName) {
-            // Ocultar todas las pestañas
-            document.querySelectorAll('.tab-content').forEach(tab => {
-                tab.classList.add('hidden');
-            });
+    // Ocultar todas las pestañas
+    document.querySelectorAll('.tab-content').forEach(tab => {
+        tab.classList.add('hidden');
+    });
 
-            // Mostrar la pestaña seleccionada
-            document.getElementById(tabName + 'Tab').classList.remove('hidden');
+    // Mostrar la pestaña seleccionada
+    document.getElementById(tabName + 'Tab').classList.remove('hidden');
 
-            // Actualizar botones de pestañas
-            document.querySelectorAll('.tab').forEach(tab => {
-                tab.classList.remove('active');
-            });
-            event.target.classList.add('active');
-        }
+    // Actualizar botones de pestañas
+    document.querySelectorAll('.tab').forEach(tab => {
+        tab.classList.remove('active');
+    });
+    event.target.classList.add('active');
+
+    // Cargar actualizaciones si es la pestaña correspondiente
+    if (tabName === 'updates') {
+        cargarActualizaciones();
+    }
+}
+
 
         function openModal(modalId) {
             document.getElementById(modalId).style.display = 'block';
@@ -1384,55 +1462,7 @@
             }
         }
 
-        function renderFolderTree() {
-            const folderTree = document.getElementById('folderTree');
-            folderTree.innerHTML = '';
-
-            if (folders.length === 0) {
-                folderTree.innerHTML = '<p>No hay carpetas creadas</p>';
-                return;
-            }
-
-            folders.forEach(folder => {
-                const folderDiv = document.createElement('div');
-                folderDiv.className = 'folder-item';
-                folderDiv.innerHTML = `
-                    <i class="fas fa-folder" style="color: ${folder.color}; margin-right: 10px;"></i>
-                    <strong>${folder.name}</strong>
-                    <span class="added-by"> - por ${folder.created_by}</span>
-                `;
-                folderDiv.onclick = () => selectFolder(folder.id);
-                folderTree.appendChild(folderDiv);
-            });
-        }
-
-        function selectFolder(folderId) {
-            currentFolder = folderId;
-            document.querySelectorAll('.folder-item').forEach(item => {
-                item.classList.remove('active');
-            });
-            event.target.classList.add('active');
-            performSearch();
-        }
-
-        function updateFolderSelects() {
-            const selects = document.querySelectorAll('#folderFilter, #uploadFolder');
-            selects.forEach(select => {
-                const currentValue = select.value;
-                select.innerHTML = select.id === 'folderFilter' ? 
-                    '<option value="">Todas las carpetas</option>' : 
-                    '<option value="">Sin carpeta</option>';
-                
-                folders.forEach(folder => {
-                    const option = document.createElement('option');
-                    option.value = folder.id;
-                    option.textContent = folder.name;
-                    select.appendChild(option);
-                });
-                
-                select.value = currentValue;
-            });
-        }
+        
 
         function renderFiles() {
             const filesGrid = document.getElementById('filesGrid');
@@ -1496,6 +1526,8 @@
                         </div>
                     ` : ''}
                     <p class="added-by">Creado por: ${note.created_by}</p>
+                    <p class="added-by">Fecha: ${note.date ? note.date : formatDate(note.created_at)}</p>
+
                     <div class="file-actions">
                         <button class="btn btn-danger" onclick="deleteNote(${note.id})">
                             <i class="fas fa-trash"></i> Eliminar
@@ -1992,6 +2024,7 @@
                 }
             }, 5000);
         }
+        
 
         // Función para manejar errores de conexión
         window.addEventListener('online', () => {
@@ -2004,6 +2037,74 @@
         window.addEventListener('offline', () => {
             updateConnectionStatus('disconnected');
         });
+
     </script>
+<script>
+function generateDocument() {
+    const title = document.getElementById('docTitle').value.trim() || 'Documento';
+    const content = document.getElementById('docContent').value.trim();
+    const format = document.getElementById('docFormat').value;
+    const user = currentUser || 'Usuario';
+    const now = new Date().toLocaleString();
+
+    const fullContent = `Creado por: ${user}\nFecha: ${now}\n\n${content}`;
+
+    if (!content) {
+        showMessage('El contenido no puede estar vacío', 'error');
+        return;
+    }
+
+    if (format === 'txt') {
+        const blob = new Blob([fullContent], { type: 'text/plain' });
+        const a = document.createElement('a');
+        a.href = URL.createObjectURL(blob);
+        a.download = `${title}.txt`;
+        a.click();
+        URL.revokeObjectURL(a.href);
+    } else if (format === 'doc') {
+        const header = `<html><head><meta charset="utf-8"></head><body>`;
+        const footer = "</body></html>";
+        const safeContent = fullContent.replace(/\n/g, "<br>");
+        const sourceHTML = header + safeContent + footer;
+
+        const blob = new Blob(['\ufeff', sourceHTML], {
+            type: 'application/msword'
+        });
+
+        const a = document.createElement('a');
+        a.href = URL.createObjectURL(blob);
+        a.download = `${title}.doc`;
+        a.click();
+        URL.revokeObjectURL(a.href);
+    }
+}
+</script>
+
+<script>
+async function cargarActualizaciones() {
+    try {
+        const response = await fetch('updates.json');
+        const updates = await response.json();
+        const container = document.getElementById('updatesList');
+
+        container.innerHTML = ''; // Limpiar contenido previo
+
+        updates.forEach(update => {
+            const card = document.createElement('div');
+            card.className = 'update-card';
+            card.innerHTML = `
+                <h3>${update.titulo}</h3>
+                <p>${update.descripcion}</p>
+                <p class="update-date">📅 ${update.fecha}</p>
+            `;
+            container.appendChild(card);
+        });
+    } catch (error) {
+        console.error('Error cargando updates.json:', error);
+        document.getElementById('updatesList').innerHTML = '<p>No se pudieron cargar las actualizaciones.</p>';
+    }
+}
+</script>
+
 </body>
 </html>
