@@ -642,10 +642,12 @@
     <div class="form-group">
         <label>Formato:</label>
         <select id="docFormat">
-            <option value="txt">.txt</option>
-            <!--<option value="pdf">.pdf(no funciona aun)</option>-->
-            <option value="doc">.doc</option>
-        </select>
+    <option value="txt">.txt</option>
+    <option value="docx">.docx</option>
+    <option value="pdf">.pdf</option>
+    <option value="py">.py</option>
+</select>
+
     </div>
     <button class="btn" onclick="generateDocument()">
         <i class="fas fa-file-download"></i> Generar Documento
@@ -2057,31 +2059,56 @@ function generateDocument() {
         return;
     }
 
-    if (format === 'txt') {
-        const blob = new Blob([fullContent], { type: 'text/plain' });
-        const a = document.createElement('a');
-        a.href = URL.createObjectURL(blob);
-        a.download = `${title}.txt`;
-        a.click();
-        URL.revokeObjectURL(a.href);
-    } else if (format === 'doc') {
-        const header = `<html><head><meta charset="utf-8"></head><body>`;
-        const footer = "</body></html>";
-        const safeContent = fullContent.replace(/\n/g, "<br>");
-        const sourceHTML = header + safeContent + footer;
+    let blob, mime, extension;
 
-        const blob = new Blob(['\ufeff', sourceHTML], {
-            type: 'application/msword'
-        });
+    switch (format) {
+        case 'txt':
+            blob = new Blob([fullContent], { type: 'text/plain' });
+            extension = 'txt';
+            break;
 
-        const a = document.createElement('a');
-        a.href = URL.createObjectURL(blob);
-        a.download = `${title}.doc`;
-        a.click();
-        URL.revokeObjectURL(a.href);
+        case 'py':
+            blob = new Blob([content], { type: 'text/x-python' });
+            extension = 'py';
+            break;
+
+        case 'pdf':
+            const { jsPDF } = window.jspdf;
+            const pdf = new jsPDF();
+            const lines = fullContent.split('\n');
+            let y = 10;
+            lines.forEach(line => {
+                pdf.text(line, 10, y);
+                y += 10;
+            });
+            pdf.save(`${title}.pdf`);
+            return;
+
+        case 'docx':
+            const docxContent = `
+                <html xmlns:o='urn:schemas-microsoft-com:office:office' 
+                      xmlns:w='urn:schemas-microsoft-com:office:word' 
+                      xmlns='http://www.w3.org/TR/REC-html40'>
+                <head><meta charset="utf-8"></head>
+                <body>${fullContent.replace(/\n/g, "<br>")}</body>
+                </html>`;
+            blob = new Blob(['\ufeff', docxContent], { type: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' });
+            extension = 'docx';
+            break;
+
+        default:
+            showMessage('Formato no soportado', 'error');
+            return;
     }
+
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = `${title}.${extension}`;
+    a.click();
+    URL.revokeObjectURL(a.href);
 }
 </script>
+
 
 <script>
 async function cargarActualizaciones() {
