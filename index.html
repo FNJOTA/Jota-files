@@ -1312,7 +1312,7 @@
 
             const fileInput = document.getElementById('modalFileInput');
             const files = fileInput.files;
-            const folderId = document.getElementById('uploadFolder').value || null;
+
             const subject = document.getElementById('uploadSubject').value.trim();
             const tags = document.getElementById('uploadTags').value.split(',').map(t => t.trim()).filter(t => t);
             const date = document.getElementById('uploadDate').value || null;
@@ -1333,7 +1333,7 @@
                             name: file.name,
                             size: file.size,
                             type: file.type,
-                            folder_id: folderId,
+                            folder_id: null,
                             subject: subject,
                             tags: tags,
                             date: date,
@@ -1349,7 +1349,7 @@
                 
                 // Limpiar formulario
                 document.getElementById('modalFileInput').value = '';
-                document.getElementById('uploadFolder').value = '';
+
                 document.getElementById('uploadSubject').value = '';
                 document.getElementById('uploadTags').value = '';
                 document.getElementById('uploadDate').value = '';
@@ -1487,6 +1487,9 @@
                         ${file.subject ? `<p>Materia: ${file.subject}</p>` : ''}
                         ${file.tags && file.tags.length > 0 ? `<p>Etiquetas: ${file.tags.join(', ')}</p>` : ''}
                         <p class="added-by">Subido por: ${file.uploaded_by}</p>
+                        <p class="added-by">Subido por: ${file.uploaded_by}</p>
+${file.uploaded_at ? `<p class="added-by">Creado el: ${formatDate(file.uploaded_at)}</p>` : ''}
+
                     </div>
                     <div class="file-actions">
                         <button class="btn" onclick="viewFile(${file.id})">
@@ -2104,6 +2107,17 @@ async function cargarActualizaciones() {
         document.getElementById('updatesList').innerHTML = '<p>No se pudieron cargar las actualizaciones.</p>';
     }
 }
+</script>
+<script>
+    function formatDate(dateString) {
+    const date = new Date(dateString);
+    return date.toLocaleDateString('es-CL', {
+        day: '2-digit',
+        month: '2-digit',
+        year: 'numeric'
+    });
+}
+
 </script>
 
 </body>
