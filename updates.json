@@ -1,5 +1,10 @@
 [
   {
+    "titulo": "Versión Ultra 2.0",
+    "descripcion": "Se le agrego Carpetas con su respectiva información de 2 semestre, se le agrego un editor colaborativo online funcional (simple), y muchas cosas mas. ",
+    "fecha": "2025-07-13"
+  },
+    {
     "titulo": "Versión 1.2",
     "descripcion": "Se le agrego un visor bonito para .py, .js, .html, etc, subida de carpetas completas, enlaces temporales para compartir archivos, sistema que evita sobrescribir archivos con nombres repetidos, modo claro/oscuro con guardado automático(local)",
     "fecha": "2025-07-13"
