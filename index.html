@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="icon" type="image/png" href="logo/logo.png">
     <title>Temp Files</title>
+    <script src="https://unpkg.com/mammoth/mammoth.browser.min.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github-dark.min.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
@@ -722,6 +723,23 @@ body.dark .form-group input[type="color"] {
     overflow-y: auto;
     overscroll-behavior: contain;
 }
+body.dark .folder-item {
+    background-color: #2a2e3a !important;
+    color: #f1f5f9 !important;
+    border-left-color: #818cf8 !important;
+}
+
+body.dark .folder-item:hover {
+    background-color: #3b3f4a !important;
+}
+
+body.dark .folder-item strong {
+    color: #ffffff !important;
+}
+
+body.dark .folder-item small {
+    color: #cbd5e1 !important;
+}
 
 
     </style>
@@ -730,6 +748,9 @@ body.dark .form-group input[type="color"] {
     <button class="btn" onclick="toggleTheme()">
         <i class="fas fa-adjust"></i> Cambiar tema
     </button>
+
+
+    
 <body>
 
 </div>
@@ -773,9 +794,26 @@ body.dark .form-group input[type="color"] {
             <button class="tab" onclick="showTab('generator')">
             <i class="fas fa-file-alt"></i> Crear Documento
 </button>
+<button class="tab" onclick="showTab('collabEditor')">
+  <i class="fas fa-pen"></i> Editor Colaborativo
+</button>
+
+
+
+
+
+<div>
+    
+</div>
 <button class="tab" onclick="showTab('updates')">
                 <i class="fas fa-history"></i> Actualizaciones
             </button>
+
+<button class="tab" onclick="showTab('soon')">
+    <i class="fas fa-hourglass-half"></i> Próximamente
+</button>
+
+
 
             
         </div>
@@ -801,6 +839,10 @@ body.dark .form-group input[type="color"] {
                 <div class="folder-tree" id="folderTree"></div>
                 
                 <div style="display: flex; gap: 10px; margin-bottom: 20px; flex-wrap: wrap;">
+                    <button class="btn" onclick="openModal('folderModal')">
+    <i class="fas fa-folder-plus"></i> Crear Carpeta
+</button>
+
 
                     <button class="btn btn-secondary" onclick="openModal('uploadModal')">
                         <i class="fas fa-upload"></i> Subir Archivo
@@ -810,15 +852,19 @@ body.dark .form-group input[type="color"] {
                 <div class="upload-area" id="uploadArea">
                     <i class="fas fa-cloud-upload-alt" style="font-size: 3em; color: #cbd5e0; margin-bottom: 20px;"></i>
                     <p>Arrastra archivos aquí o haz clic para seleccionar</p>
-                    <input type="file" id="fileInput" multiple style="display: none;">
-                    <input type="file" id="modalFileInput" multiple webkitdirectory directory>
+                    <input type="file" id="dropzoneFileInput" multiple accept=".txt,.pdf,.docx,.py,.zip,.rar,.csv,.md,.html,.mp4,.mp3">
+
+
+
+
 
                 </div>
 
                 <div id="filesGrid" class="files-grid"></div>
             </div>
-
+            
             <div id="generatorTab" class="tab-content hidden">
+              <h2>Creador de Documentos Mochilita </h2>  
     <div class="form-group">
         <label>Título del documento:</label>
         <input type="text" id="docTitle" placeholder="Ej: Apuntes de biología">
@@ -844,6 +890,7 @@ body.dark .form-group input[type="color"] {
 
     
             <div id="notesTab" class="tab-content hidden">
+                <h2>Creador de Notas Richard </h2> 
                 <button class="btn" onclick="openModal('noteModal')" style="margin-bottom: 20px;">
                     <i class="fas fa-plus"></i> Nueva Nota
                 </button>
@@ -852,6 +899,7 @@ body.dark .form-group input[type="color"] {
 
             
             <div id="linksTab" class="tab-content hidden">
+                <h2>Creador de Enlaces David</h2> 
                 <button class="btn" onclick="openModal('linkModal')" style="margin-bottom: 20px;">
                     <i class="fas fa-plus"></i> Nuevo Enlace
                 </button>
@@ -861,6 +909,7 @@ body.dark .form-group input[type="color"] {
            
 
 <div id="calendarTab" class="tab-content hidden">
+    <h2>Calendario JoacoGPT </h2> 
     <div class="calendar-container">
         <input type="text" id="calendarPicker" placeholder="Selecciona una fecha">
         <div id="calendarContent" style="margin-top: 20px;"></div>
@@ -872,6 +921,24 @@ body.dark .form-group input[type="color"] {
     <h2>Historial de Actualizaciones</h2>
     <div id="updatesList" class="updates-list"></div>
 </div>
+
+<div id="soonTab" class="tab-content hidden">
+    <h2>🚧 Próximamente</h2>
+    <div id="soonList" class="updates-list">
+        <p>Cargando novedades...</p>
+    </div>
+</div>
+
+
+<div id="collabEditorTab" class="tab-content hidden">
+  <h2>Editor Colaborativo Diegin</h2>
+  <textarea id="collabEditor" placeholder="Escribe aquí..." style="width: 100%; height: 300px;"></textarea>
+  <button class="btn" id="saveCollabButton" style="margin-top: 15px;">
+    <i class="fas fa-save"></i> Guardar Documento
+  </button>
+</div>
+
+
 
             </div>
             </div>
@@ -915,6 +982,13 @@ body.dark .form-group input[type="color"] {
                 <label>Archivo:</label>
                 <input type="file" id="modalFileInput" multiple>
             </div>
+<div class="form-group">
+    <label>Selecciona Carpeta:</label>
+    <select id="uploadFolder">
+        <option value="">Sin carpeta</option>
+        <!-- Se llenará dinámicamente -->
+    </select>
+</div>
 
             <div class="form-group">
                 <label>Materia:</label>
@@ -1044,17 +1118,24 @@ body.dark .form-group input[type="color"] {
         let notes = [];
         let links = [];
         let isConnected = false;
+        let fileWizardState = null;
+        let collabContent = '';
+        let collabDocId = 1;
+
 
         // Configurar PDF.js
         pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
 
         // Inicialización
         document.addEventListener('DOMContentLoaded', function() {
-            initializeSupabase();
-            setupEventListeners();
-            setupCalendar();
-            loadUserName();
-        });
+  initializeSupabase();
+  setupEventListeners();
+  setupCalendar();
+  loadUserName();
+  setupCollaborativeEditor(); // ← bien aquí
+});
+
+
 
         async function initializeSupabase() {
             try {
@@ -1182,7 +1263,8 @@ body.dark .form-group input[type="color"] {
         function setupEventListeners() {
            
             const uploadArea = document.getElementById('uploadArea');
-            const fileInput = document.getElementById('fileInput');
+            const fileInput = document.getElementById('dropzoneFileInput');
+
 
             uploadArea.addEventListener('click', () => fileInput.click());
             uploadArea.addEventListener('dragover', (e) => {
@@ -1368,6 +1450,20 @@ body.dark .form-group input[type="color"] {
                     loadLinks();
                 })
                 .subscribe();
+
+            supabaseClient
+  .channel('shared_files')
+  .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'shared_files' }, (payload) => {
+    if (payload.new.id === collabDocId) {
+      const editor = document.getElementById('collabEditor');
+      if (editor && payload.new.content !== editor.value) {
+        collabContent = payload.new.content;
+        editor.value = payload.new.content;
+      }
+    }
+  })
+  .subscribe();
+
         }
 
         function showTab(tabName) {
@@ -1389,6 +1485,10 @@ body.dark .form-group input[type="color"] {
     if (tabName === 'updates') {
         cargarActualizaciones();
     }
+    if (tabName === 'soon') {
+    cargarSoonList(); // ✅ Cargar contenido dinámicamente
+}
+
 }
 
 
@@ -1506,6 +1606,7 @@ body.dark .form-group input[type="color"] {
             const subject = document.getElementById('uploadSubject').value.trim();
             const tags = document.getElementById('uploadTags').value.split(',').map(t => t.trim()).filter(t => t);
             const date = document.getElementById('uploadDate').value || null;
+            const folderId = document.getElementById('uploadFolder').value || null;
             const uploadedBy = document.getElementById('uploadCreatedBy').value.trim() || currentUser;
 
             if (files.length === 0) {
@@ -1523,7 +1624,7 @@ body.dark .form-group input[type="color"] {
                             name: file.name,
                             size: file.size,
                             type: file.type,
-                            folder_id: null,
+                            folder_id: folderId,
                             subject: subject,
                             tags: tags,
                             date: date,
@@ -1655,51 +1756,41 @@ body.dark .form-group input[type="color"] {
         
 
         function renderFiles() {
-            const filesGrid = document.getElementById('filesGrid');
-            filesGrid.innerHTML = '';
+    const filesGrid = document.getElementById('filesGrid');
+    filesGrid.innerHTML = '';
 
-            if (files.length === 0) {
-                filesGrid.innerHTML = '<p>No hay archivos subidos</p>';
-                return;
-            }
+    const visibleFiles = currentFolder
+        ? files.filter(f => f.folder_id === currentFolder)
+        : files;
 
-            files.forEach(file => {
-                const fileCard = document.createElement('div');
-                fileCard.className = 'file-card';
-                fileCard.innerHTML = `
-                    <div class="file-preview">
-                        ${getFileIcon(file.type)}
-                    </div>
-                    <div class="file-info">
-                        <h3>${file.name}</h3>
-                        <p>Tamaño: ${formatFileSize(file.size)}</p>
-                        <p>Tipo: ${file.type}</p>
-                        ${file.subject ? `<p>Materia: ${file.subject}</p>` : ''}
-                        ${file.tags && file.tags.length > 0 ? `<p>Etiquetas: ${file.tags.join(', ')}</p>` : ''}
-                        <p class="added-by">Subido por: ${file.uploaded_by}</p>
-                        <p class="added-by">Subido por: ${file.uploaded_by}</p>
-${file.uploaded_at ? `<p class="added-by">Creado el: ${formatDate(file.uploaded_at)}</p>` : ''}
+    if (!visibleFiles.length) {
+        filesGrid.innerHTML = '<p style="text-align:center;">No hay archivos en esta carpeta</p>';
+        return;
+    }
 
-                    </div>
-                    <div class="file-actions">
-                        <button class="btn" onclick="viewFile(${file.id})">
-                            <i class="fas fa-eye"></i> Ver
-                        </button>
-                        <button class="btn" onclick="downloadFile(${file.id})">
-                            <i class="fas fa-download"></i> Descargar
-                        </button>
-                        <button class="btn btn-danger" onclick="deleteFile(${file.id})">
-                            <i class="fas fa-trash"></i> Eliminar
-                        </button>
-                        <button class="btn" onclick="shareFile(${file.id})">
-                        <i class="fas fa-share-alt"></i> Compartir
-                        </button>
+    visibleFiles.forEach(file => {
+        const fileCard = document.createElement('div');
+        fileCard.className = 'file-card';
+        fileCard.innerHTML = `
+            <div class="file-preview">${getFileIcon(file.type)}</div>
+            <div class="file-info">
+                <h3>${file.name}</h3>
+                <p>Tamaño: ${formatFileSize(file.size)}</p>
+                <p>Tipo: ${file.type}</p>
+                ${file.subject ? `<p>Materia: ${file.subject}</p>` : ''}
+                ${file.tags?.length ? `<p>Etiquetas: ${file.tags.join(', ')}</p>` : ''}
+                <p class="added-by">Subido por: ${file.uploaded_by}</p>
+            </div>
+            <div class="file-actions">
+                <button class="btn" onclick="viewFile(${file.id})"><i class="fas fa-eye"></i> Ver</button>
+                <button class="btn" onclick="downloadFile(${file.id})"><i class="fas fa-download"></i> Descargar</button>
+                <button class="btn btn-danger" onclick="deleteFile(${file.id})"><i class="fas fa-trash"></i> Eliminar</button>
+            </div>
+        `;
+        filesGrid.appendChild(fileCard);
+    });
+}
 
-                    </div>
-                `;
-                filesGrid.appendChild(fileCard);
-            });
-        }
 
         function renderNotes() {
             const notesGrid = document.getElementById('notesGrid');
@@ -1881,76 +1972,62 @@ ${file.uploaded_at ? `<p class="added-by">Creado el: ${formatDate(file.uploaded_
         }
 
         async function viewFile(fileId) {
-            const file = files.find(f => f.id === fileId);
-            if (!file) return;
+    const file = files.find(f => f.id === fileId);
+    if (!file) return;
 
-            const modal = document.getElementById('fileViewerModal');
-            const title = document.getElementById('viewerTitle');
-            const viewer = document.getElementById('fileViewer');
-            const controls = document.getElementById('pdfControls');
+    const modal = document.getElementById('fileViewerModal');
+    const title = document.getElementById('viewerTitle');
+    const viewer = document.getElementById('fileViewer');
+    const controls = document.getElementById('pdfControls');
 
-            title.textContent = file.name;
-            viewer.innerHTML = '';
-            controls.classList.add('hidden');
+    title.textContent = file.name;
+    viewer.innerHTML = '';
+    controls.classList.add('hidden');
 
-            try {
-                const fileData = base64ToBlob(file.file_data, file.type);
-                const fileUrl = URL.createObjectURL(fileData);
+    const ext = file.name.split('.').pop().toLowerCase();
+    const blob = base64ToBlob(file.file_data, file.type);
+    const url = URL.createObjectURL(blob);
 
-                if (file.type === 'application/pdf') {
+    if (ext === 'pdf') {
+        controls.classList.remove('hidden');
+        await displayPDF(url);
+    } else if (['mp4', 'webm'].includes(ext)) {
+        viewer.innerHTML = `<video src="${url}" controls style="max-width:100%"></video>`;
+    } else if (['mp3', 'wav'].includes(ext)) {
+        viewer.innerHTML = `<audio src="${url}" controls></audio>`;
+    } else if (['jpg','jpeg','png','gif','webp','bmp'].includes(ext)) {
+        viewer.innerHTML = `<img src="${url}" style="max-width:100%;">`;
+    } else if (ext === 'html') {
+        viewer.innerHTML = `<iframe src="${url}" style="width:100%;height:500px;border:1px solid #ccc;"></iframe>`;
+    } else if (['txt', 'py', 'csv', 'md', 'js', 'json'].includes(ext)) {
+        const text = await blob.text();
+        const pre = document.createElement('pre');
+        const code = document.createElement('code');
+        code.textContent = text;
+        code.className = ext;
+        pre.appendChild(code);
+        viewer.appendChild(pre);
+        hljs.highlightElement(code);
+    } else if (ext === 'docx') {
+        const arrayBuffer = await blob.arrayBuffer();
+        mammoth.convertToHtml({arrayBuffer}).then(result => {
+            viewer.innerHTML = `<div style="background:#f5f5f5;padding:10px">${result.value}</div>`;
+        });
+    } else {
+        viewer.innerHTML = `
+            <div style="text-align: center; padding: 40px;">
+                <i class="fas fa-file" style="font-size: 4em; color: #cbd5e0; margin-bottom: 20px;"></i>
+                <p>Vista previa no disponible para este tipo de archivo</p>
+                <button class="btn" onclick="downloadFile(${fileId})">
+                    <i class="fas fa-download"></i> Descargar
+                </button>
+            </div>
+        `;
+    }
 
-                    controls.classList.remove('hidden');
-                    await displayPDF(fileUrl);
-                } else if (file.type.startsWith('image/')) {
+    modal.style.display = 'block';
+}
 
-                    const img = document.createElement('img');
-                    img.src = fileUrl;
-                    img.style.maxWidth = '100%';
-                    img.style.maxHeight = '100%';
-                    viewer.appendChild(img);
-                } else if (file.type.startsWith('text/')) {
-
-                    const text = await fetch(fileUrl).then(r => r.text());
-                    const pre = document.createElement('pre');
-                    const code = document.createElement('code');
-                    code.textContent = text;
-                    code.className = file.name.split('.').pop(); 
-                    pre.appendChild(code);
-                    pre.style.maxHeight = '500px';
-                    pre.style.overflow = 'auto';
-                    viewer.appendChild(pre);
-                    hljs.highlightElement(code);
-                } else {
-                    viewer.innerHTML = `
-                        <div style="text-align: center; padding: 40px;">
-                            <i class="fas fa-file" style="font-size: 4em; color: #cbd5e0; margin-bottom: 20px;"></i>
-                            <p>Vista previa no disponible para este tipo de archivo</p>
-                            <button class="btn" onclick="downloadFile(${fileId})">
-                                <i class="fas fa-download"></i> Descargar
-                            </button>
-                        </div>
-                    `;
-                }
-
-                modal.style.display = 'block';
-            } catch (error) {
-                console.error('Error mostrando archivo:', error);
-                showMessage('Error mostrando archivo: ' + error.message, 'error');
-            }
-        }
-
-        async function displayPDF(pdfUrl) {
-            try {
-                const pdf = await pdfjsLib.getDocument(pdfUrl).promise;
-                currentPdf = pdf;
-                currentPage = 1;
-                document.getElementById('totalPages').textContent = pdf.numPages;
-                await renderPDFPage(currentPage);
-            } catch (error) {
-                console.error('Error cargando PDF:', error);
-                document.getElementById('fileViewer').innerHTML = '<p>Error cargando PDF</p>';
-            }
-        }
 
         async function renderPDFPage(pageNumber) {
             if (!currentPdf) return;
@@ -2379,6 +2456,163 @@ function applyTheme() {
 
 
 </script>
+<script>
+    function renderFolderTree() {
+    const folderTree = document.getElementById('folderTree');
+    folderTree.innerHTML = '';
 
+
+    // ✅ Botón "Todos los archivos"
+    const allButton = document.createElement('div');
+    allButton.className = 'folder-item';
+    allButton.innerHTML = `<strong>📁 Todos los archivos</strong>`;
+    allButton.style.cursor = 'pointer';
+    allButton.style.marginBottom = '10px';
+    allButton.style.background = '#f3f4f6';
+    allButton.style.padding = '8px';
+    allButton.style.borderRadius = '8px';
+
+    allButton.addEventListener('click', () => {
+        currentFolder = null;
+        renderFiles();
+        highlightSelectedFolder(null);
+    });
+
+    folderTree.appendChild(allButton);
+
+
+    if (!folders.length) {
+        folderTree.innerHTML = '<p style="text-align:center;">No hay carpetas creadas</p>';
+        return;
+    }
+
+    folders.forEach(folder => {
+        const folderDiv = document.createElement('div');
+        folderDiv.className = 'folder-item';
+        folderDiv.style.borderLeft = `6px solid ${folder.color}`;
+        folderDiv.style.padding = '10px';
+        folderDiv.style.marginBottom = '8px';
+        folderDiv.style.background = '#fff';
+        folderDiv.style.cursor = 'pointer';
+        folderDiv.style.borderRadius = '8px';
+        folderDiv.innerHTML = `
+            <strong>${folder.name}</strong><br>
+            <small>${folder.description || ''}</small>
+        `;
+
+        folderDiv.addEventListener('click', () => {
+            currentFolder = folder.id;
+            renderFiles(); // mostrará solo archivos de esa carpeta
+            highlightSelectedFolder(folder.id);
+        });
+
+        folderTree.appendChild(folderDiv);
+    });
+}
+
+function highlightSelectedFolder(folderId) {
+    const all = document.querySelectorAll('.folder-item');
+    all.forEach(f => f.style.background = '#fff');
+    const selected = [...all].find(f => f.textContent.includes(folders.find(f => f.id === folderId)?.name));
+    if (selected) selected.style.background = '#e0e7ff';
+}
+
+</script>
+<script>
+
+    function updateFolderSelects() {
+    const folderSelect = document.getElementById('uploadFolder');
+    if (!folderSelect) return;
+
+    folderSelect.innerHTML = '<option value="">Sin carpeta</option>';
+    folders.forEach(folder => {
+        const option = document.createElement('option');
+        option.value = folder.id;
+        option.textContent = folder.name;
+        folderSelect.appendChild(option);
+    });
+}
+
+</script>
+<script>
+    async function cargarSoonList() {
+    try {
+        const response = await fetch('soon.json'); // O URL externa
+        const novedades = await response.json();
+
+        const soonList = document.getElementById('soonList');
+        soonList.innerHTML = '';
+
+        novedades.forEach(item => {
+            const card = document.createElement('div');
+            card.className = 'update-card';
+            card.innerHTML = `
+                <h3>🛠️ ${item.title}</h3>
+                <p>${item.description}</p>
+                <p class="update-date">Planeado para: ${item.date}</p>
+            `;
+            soonList.appendChild(card);
+        });
+    } catch (error) {
+        document.getElementById('soonList').innerHTML = '<p>Error al cargar novedades.</p>';
+        console.error('Error cargando soon.json:', error);
+    }
+}
+
+</script>
+<script>
+function setupCollaborativeEditor() {
+  const editor = document.getElementById('collabEditor');
+  if (!editor) return;
+
+  let debounceTimer;
+  const indicator = document.getElementById('realtimeIndicator');
+
+  editor.addEventListener('input', (e) => {
+    const newText = e.target.value;
+
+    if (newText === collabContent) return;
+
+    collabContent = newText;
+
+    clearTimeout(debounceTimer);
+
+    if (indicator) {
+      indicator.classList.add('syncing');
+      indicator.textContent = 'Guardando cambios...';
+    }
+
+    debounceTimer = setTimeout(() => {
+      supabaseClient
+        .from('shared_files')
+        .update({ content: collabContent, updated_by: currentUser })
+        .eq('id', collabDocId)
+        .then(({ error }) => {
+          if (error) {
+            console.error('Error guardando:', error);
+            if (indicator) {
+              indicator.classList.add('error');
+              indicator.textContent = 'Error al guardar';
+            }
+          } else {
+            if (indicator) {
+              indicator.classList.remove('syncing', 'error');
+              indicator.textContent = 'Guardado ✓';
+            }
+          }
+        })
+        .catch((err) => {
+          console.error('Error guardando:', err);
+          if (indicator) {
+            indicator.classList.add('error');
+            indicator.textContent = 'Error al guardar';
+          }
+        });
+    }, 500);
+  });
+}
+
+
+</script>
 </body>
 </html>
