@@ -1,12 +1,7 @@
 [
   {
-    "title": "Carpetas con propia información",
-    "description": "Cada carpeta tendra su respectiva información, esto existia solo que ahora con la función bien implementada",
+    "title": "Calculador de notas con porcentaje y guardado propio",
+    "description": "Cada integrante podra calcular sus notas y guardarlas en su propia carpeta asi lleva un calculo de sus notas :)",
     "date": "Segundo semestre"
-  },
-  {
-    "title": "Editor en vivo de archivos sencillos",
-    "description": "Todos podran editar un archivo en vivo",
-    "date": "sin fecha"
   }
 ]
